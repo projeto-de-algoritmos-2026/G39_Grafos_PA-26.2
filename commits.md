@@ -18,3 +18,7 @@ Mais nós no jogo e tela responsiva
 **autor:** Isabelle
 Inicio de testes do layout e front tentando fazer parecer com o jogo da polly
 apenas ruas e nos foram montados
+
+### layout: faixa de pedestres
+**autor:** Isabelle
+ajuste da faixa de pedestres, commit para nao perder configuracoes
