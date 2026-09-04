@@ -10,6 +10,6 @@ A ideia é que cada no seja uma esquina da cidade, cada rua com peso 1 seja uma 
 Adicionei diferentes tipos de obstáculos igual ao jogo da polly (tornado, lama, pregos, óleo)
 Como rodar - readme
 
-### +nos e repsonsivo
+### +nos e responsivo
 **autor:** Isabelle
 Mais nós no jogo e tela responsiva
