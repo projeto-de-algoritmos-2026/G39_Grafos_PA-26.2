@@ -22,3 +22,7 @@ apenas ruas e nos foram montados
 ### layout: faixa de pedestres
 **autor:** Isabelle
 ajuste da faixa de pedestres, commit para nao perder configuracoes
+
+### layout: rua
+**autor:** Isabelle
+ajustes finais da rua

@@ -32,8 +32,8 @@
     // estilo da rua, copiando o visual do jogo da Polly
     const LARGURA_RUA = 70;
     const COR_ASFALTO = "#a8a6a3";
-    const COR_FAIXA = "#ffffff";
-    const DIST_FAIXA_PEDESTRE = 55; // distancia da faixa de pedestre ate o no
+    const COR_FAIXA = "rgba(255, 255, 255, 0.8)";
+    const DIST_FAIXA_PEDESTRE = 48; // distancia da faixa de pedestre ate o no
 
     const svg = document.querySelector("svg");
     const ns = "http://www.w3.org/2000/svg";
@@ -51,9 +51,9 @@
     function faixaDePedestre(cx, cy, horizontal) {
       const comprimento = 20; // distancia entre as duas linhas
       const largura = LARGURA_RUA - 16; // ate onde as linhas se estendem pela rua
-      const nRetangulos = 5;
+      const nRetangulos = 6;
       const compRetangulo = comprimento - 6; // quase preenche o vao entre as duas linhas
-      const espRetangulo = 4; // espessura (no sentido em que ficam empilhados)
+      const espRetangulo = 5; // espessura (no sentido em que ficam empilhados)
 
       if (horizontal) {
         // as duas linhas
@@ -103,11 +103,11 @@
       // faixa central: para exatamente na borda do cruzamento, nao no centro do no
       // (senao a rua perpendicular corta a linha em cima e sobra um pedacinho, parecendo linha dupla)
       el("line", horizontal
-        ? { x1: de.x + LARGURA_RUA / 2, y1: de.y, x2: para.x - LARGURA_RUA / 2, y2: de.y }
-        : { x1: de.x, y1: de.y + LARGURA_RUA / 2, x2: de.x, y2: para.y - LARGURA_RUA / 2 }
+        ? { x1: de.x + LARGURA_RUA , y1: de.y, x2: para.x - LARGURA_RUA , y2: de.y }
+        : { x1: de.x, y1: de.y + LARGURA_RUA, x2: de.x, y2: para.y - LARGURA_RUA }
       ).setAttribute("stroke", COR_FAIXA);
       const linha = svg.lastElementChild;
-      linha.setAttribute("stroke-width", 3);
+      linha.setAttribute("stroke-width", 1.5);
       // linha.setAttribute("stroke-dasharray", "22 16");
 
       // faixas de pedestre perto de cada esquina
@@ -120,12 +120,26 @@
       }
     }
 
-    // 1) desenha todas as ruas primeiro (ficam atras dos nos)
+    // 1) embaixo de cada no, um "quadrado" com cantos arredondados.
+    // as ruas que saem do no sao retangulos retos desenhados por cima, entao
+    // cobrem (deixam reto) o lado onde tem rua; so sobra curva nas pontas de
+    // fora, onde a rua nao continua.
+    const RAIO_CURVA = 16;
+    for (const no of NOS) {
+      el("rect", {
+        x: no.x - LARGURA_RUA / 2, y: no.y - LARGURA_RUA / 2,
+        width: LARGURA_RUA, height: LARGURA_RUA,
+        rx: RAIO_CURVA, ry: RAIO_CURVA,
+        fill: COR_ASFALTO,
+      });
+    }
+
+    // 2) desenha todas as ruas por cima (ficam atras dos nos)
     for (const [a, b] of RUAS) {
       desenhaRua(porId[a], porId[b]);
     }
 
-    // 2) desenha os nos (esquinas) por cima
+    // 3) desenha os nos (esquinas) por cima
     for (const no of NOS) {
       el("circle", { cx: no.x, cy: no.y, r: 22, class: "no" });
       const label = el("text", { x: no.x, y: no.y + 5, class: "no-label" });
