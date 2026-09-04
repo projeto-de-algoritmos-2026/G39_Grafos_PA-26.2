@@ -36,3 +36,7 @@ adicionei primeiras imagens na pasta imagens/canteiros para terrenos
 **autor:** Isabelle
 adicionei mais nos no layout
 
+### layout: v1
+**autor:** Isabelle
+ajustei ruas, mudei o terreno para se adpatr melhor no computador
+

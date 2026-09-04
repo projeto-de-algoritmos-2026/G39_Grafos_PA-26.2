@@ -11,14 +11,23 @@
 </head>
 <body>
   <h1>Grafo da cidade</h1>
-  <svg width="950" height="650"></svg>
+  <svg width="1450" height="650"></svg>
 
   <script>
     // grafo: 24 nos, 4 linhas de 6, arestas lado-com-lado e frente-com-frente
     const COLUNAS = 6;
     const LINHAS = 4;
-    const ESPACAMENTO = 150;
     const MARGEM = 100;
+
+    // espacamento vertical (base): rua + terreno, com o terreno valendo 2x a rua
+    const ESPACAMENTO_Y = 150;
+    const LARGURA_RUA = ESPACAMENTO_Y / 3;
+    const TERRENO_ALTURA = ESPACAMENTO_Y - LARGURA_RUA;
+
+    // os terrenos sao 2x mais largos que altos, entao o espacamento horizontal
+    // cresce junto (a rua continua com a mesma largura dos dois lados)
+    const TERRENO_LARGURA = TERRENO_ALTURA * 2;
+    const ESPACAMENTO_X = LARGURA_RUA + TERRENO_LARGURA;
 
     // id do no na linha r, coluna c (0-indexado), numerado tipo leitura: 1..24
     const idNo = (r, c) => r * COLUNAS + c + 1;
@@ -26,7 +35,7 @@
     const NOS = [];
     for (let r = 0; r < LINHAS; r++) {
       for (let c = 0; c < COLUNAS; c++) {
-        NOS.push({ id: idNo(r, c), x: MARGEM + c * ESPACAMENTO, y: MARGEM + r * ESPACAMENTO });
+        NOS.push({ id: idNo(r, c), x: MARGEM + c * ESPACAMENTO_X, y: MARGEM + r * ESPACAMENTO_Y });
       }
     }
 
@@ -45,10 +54,11 @@
     }
 
     // estilo da rua, copiando o visual do jogo da Polly
-    const LARGURA_RUA = 70;
     const COR_ASFALTO = "#a8a6a3";
     const COR_FAIXA = "rgba(255, 255, 255, 0.8)";
     const DIST_FAIXA_PEDESTRE = 48; // distancia da faixa de pedestre ate o no
+    const COMPRIMENTO_FAIXA_PEDESTRE = 10; // distancia entre as duas linhas da faixa
+    const FOLGA_LINHA_CENTRAL = 6; // espacinho pra faixa central nao encostar na faixa de pedestre
 
     const svg = document.querySelector("svg");
     const ns = "http://www.w3.org/2000/svg";
@@ -61,8 +71,6 @@
       return e;
     }
 
-    const defs = el("defs", {});
-
     // quadras: os espacos vazios no meio da rua, cada um delimitado por 4 nos
     const QUADRAS = [];
     for (let r = 0; r < LINHAS - 1; r++) {
@@ -70,15 +78,12 @@
         QUADRAS.push([idNo(r, c), idNo(r, c + 1), idNo(r + 1, c + 1), idNo(r + 1, c)]);
       }
     }
-    const IMG_CANTEIRO = "imagens/canteiro-flores.png";
-    const IMG_TAMANHO = 562; // tamanho do arquivo original (quadrado)
-    // o png tem uma margem transparente em volta do canteiro; esse e o
-    // retangulo (dentro do arquivo original) onde a imagem "de verdade" comeca,
-    // pra gente conseguir esticar so essa parte e preencher a quadra ate a pista
-    const IMG_MARGEM = { x: 49, y: 53, width: 467, height: 460 };
+    // essa imagem ja vai de ponta a ponta (sem margem transparente) e ja e
+    // quase 2:1, entao nao precisa de recorte: so esticar pro tamanho da quadra
+    const IMG_CANTEIRO = "imagens/canteiros/quadra-parque.png";
 
-    // preenche uma quadra com a imagem do canteiro de flores, esticada pra
-    // cobrir a quadra inteira (sem sobrar a margem transparente do arquivo)
+    // preenche uma quadra com a imagem do parque, esticada pra cobrir a
+    // quadra inteira (do tamanho ja decidido: 200 de largura x 100 de altura)
     function desenhaQuadra(ids) {
       const pontos = ids.map(id => porId[id]);
       const xs = pontos.map(p => p.x), ys = pontos.map(p => p.y);
@@ -87,40 +92,27 @@
       const blocoW = Math.max(...xs) - Math.min(...xs) - LARGURA_RUA;
       const blocoH = Math.max(...ys) - Math.min(...ys) - LARGURA_RUA;
 
-      // corta fora o que passar da quadra (a margem transparente da imagem)
-      const clipId = `clip-quadra-${ids.join("-")}`;
-      const clip = el("clipPath", { id: clipId }, defs);
-      el("rect", { x: blocoX, y: blocoY, width: blocoW, height: blocoH }, clip);
-
-      // escala calculada pra so a parte "de verdade" da imagem (sem a margem)
-      // preencher exatamente a quadra
-      const escalaX = blocoW / IMG_MARGEM.width;
-      const escalaY = blocoH / IMG_MARGEM.height;
-
       el("image", {
         href: IMG_CANTEIRO,
-        x: blocoX - IMG_MARGEM.x * escalaX,
-        y: blocoY - IMG_MARGEM.y * escalaY,
-        width: IMG_TAMANHO * escalaX,
-        height: IMG_TAMANHO * escalaY,
+        x: blocoX, y: blocoY,
+        width: blocoW, height: blocoH,
         preserveAspectRatio: "none",
-        "clip-path": `url(#${clipId})`,
       });
     }
 
     // faixa de pedestre perto de um no: 2 linhas (uma de cada lado) + 4 retangulos
     // entre elas, um do lado do outro no sentido da linha da rua
     function faixaDePedestre(cx, cy, horizontal) {
-      const comprimento = 20; // distancia entre as duas linhas
+      const comprimento = COMPRIMENTO_FAIXA_PEDESTRE; // distancia entre as duas linhas
       const largura = LARGURA_RUA - 16; // ate onde as linhas se estendem pela rua
-      const nRetangulos = 6;
-      const compRetangulo = comprimento - 6; // quase preenche o vao entre as duas linhas
-      const espRetangulo = 5; // espessura (no sentido em que ficam empilhados)
+      const nRetangulos = 5;
+      const compRetangulo = comprimento - 4; // quase preenche o vao entre as duas linhas
+      const espRetangulo = 4; // espessura (no sentido em que ficam empilhados)
 
       if (horizontal) {
         // as duas linhas
-        el("rect", { x: cx - comprimento / 2 - 1, y: cy - largura / 2, width: 2, height: largura, fill: COR_FAIXA });
-        el("rect", { x: cx + comprimento / 2 - 1, y: cy - largura / 2, width: 2, height: largura, fill: COR_FAIXA });
+        el("rect", { x: cx - comprimento / 2 - 1, y: cy - largura / 2, width: 1, height: largura, fill: COR_FAIXA });
+        el("rect", { x: cx + comprimento / 2 - 1, y: cy - largura / 2, width: 1, height: largura, fill: COR_FAIXA });
 
         // os 4 retangulos, no sentido das linhas (empilhados ao longo delas)
         for (let i = 0; i < nRetangulos; i++) {
@@ -129,8 +121,8 @@
         }
       } else {
         // as duas linhas
-        el("rect", { x: cx - largura / 2, y: cy - comprimento / 2 - 1, width: largura, height: 2, fill: COR_FAIXA });
-        el("rect", { x: cx - largura / 2, y: cy + comprimento / 2 - 1, width: largura, height: 2, fill: COR_FAIXA });
+        el("rect", { x: cx - largura / 2, y: cy - comprimento / 2 - 1, width: largura, height: 1, fill: COR_FAIXA });
+        el("rect", { x: cx - largura / 2, y: cy + comprimento / 2 - 1, width: largura, height: 1, fill: COR_FAIXA });
 
         // os 4 retangulos, no sentido das linhas (empilhados ao longo delas)
         for (let i = 0; i < nRetangulos; i++) {
@@ -162,11 +154,12 @@
         });
       }
 
-      // faixa central: para exatamente na borda do cruzamento, nao no centro do no
-      // (senao a rua perpendicular corta a linha em cima e sobra um pedacinho, parecendo linha dupla)
+      // faixa central: para um pouco antes da faixa de pedestre de cada lado,
+      // pra nao encostar/passar por cima dela
+      const insetLinha = DIST_FAIXA_PEDESTRE + COMPRIMENTO_FAIXA_PEDESTRE / 2 + FOLGA_LINHA_CENTRAL;
       el("line", horizontal
-        ? { x1: de.x + LARGURA_RUA , y1: de.y, x2: para.x - LARGURA_RUA , y2: de.y }
-        : { x1: de.x, y1: de.y + LARGURA_RUA, x2: de.x, y2: para.y - LARGURA_RUA }
+        ? { x1: de.x + insetLinha, y1: de.y, x2: para.x - insetLinha, y2: de.y }
+        : { x1: de.x, y1: de.y + insetLinha, x2: de.x, y2: para.y - insetLinha }
       ).setAttribute("stroke", COR_FAIXA);
       const linha = svg.lastElementChild;
       linha.setAttribute("stroke-width", 1.5);
@@ -208,7 +201,7 @@
 
     // 4) desenha os nos (esquinas) por cima
     for (const no of NOS) {
-      el("circle", { cx: no.x, cy: no.y, r: 22, class: "no" });
+      el("circle", { cx: no.x, cy: no.y, r: 18, class: "no" });
       const label = el("text", { x: no.x, y: no.y + 5, class: "no-label" });
       label.textContent = no.id;
     }
