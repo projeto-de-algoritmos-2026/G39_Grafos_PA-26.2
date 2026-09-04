@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Grafo de 12 Nós (Dijkstra)</title>
+</head>
+<body>
+
+  <!-- caixa pro grafo -->
+  <svg id="grafo" width="650" height="500" style="background: white; border: 1px solid black;"></svg>
+
+  <!-- dados.js e gerado pelo grafo.py, e cria a variavel dadosDoGrafo -->
+  <script src="dados.js"></script>
+  <script>
+
+    var conteudoSvg = "";
+
+
+    for (var i = 0; i < dadosDoGrafo.arestas.length; i++) {
+      var aresta = dadosDoGrafo.arestas[i];
+
+
+      var noOrigem = null;
+      var noDestino = null;
+      for (var j = 0; j < dadosDoGrafo.nos.length; j++) {
+        if (dadosDoGrafo.nos[j].id === aresta.source) {
+          noOrigem = dadosDoGrafo.nos[j];
+        }
+        if (dadosDoGrafo.nos[j].id === aresta.target) {
+          noDestino = dadosDoGrafo.nos[j];
+        }
+      }
+
+
+      conteudoSvg += "<line x1='" + noOrigem.x + "' y1='" + noOrigem.y +
+        "' x2='" + noDestino.x + "' y2='" + noDestino.y +
+        "' stroke='gray' stroke-width='3' />";
+
+      var meioX = (noOrigem.x + noDestino.x) / 2;
+      var meioY = (noOrigem.y + noDestino.y) / 2;
+      conteudoSvg += "<text x='" + meioX + "' y='" + meioY +
+        "' fill='black' font-size='14'>" + aresta.peso + "</text>";
+    }
+
+    for (var i = 0; i < dadosDoGrafo.nos.length; i++) {
+      var no = dadosDoGrafo.nos[i];
+
+      conteudoSvg += "<circle cx='" + no.x + "' cy='" + no.y +
+        "' r='20' fill='blue' />";
+
+      conteudoSvg += "<text x='" + no.x + "' y='" + no.y +
+        "' fill='white' text-anchor='middle' dominant-baseline='middle'>" +
+        no.id + "</text>";
+    }
+
+    document.getElementById("grafo").innerHTML = conteudoSvg;
+  </script>
+
+</body>
+</html>
