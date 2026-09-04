@@ -36,7 +36,7 @@ RUAS = [
 
 # custofixo de cada tipo de rua.
 # pra declarar se nessa rua tem obstaculo ou nao
-PESO_RUA_NORMAL = 0
+PESO_RUA_NORMAL = 1
 PESO_RUA_OBSTACULO = 5
 
 
