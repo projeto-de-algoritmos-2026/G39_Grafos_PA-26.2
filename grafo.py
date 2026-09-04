@@ -34,18 +34,47 @@ RUAS = [
     ("D", "H"), ("H", "L"),
 ]
 
-# custofixo de cada tipo de rua.
-# pra declarar se nessa rua tem obstaculo ou nao
+# custo fixo da rua normal.
 PESO_RUA_NORMAL = 1
-PESO_RUA_OBSTACULO = 5
+
+# dicionario com os tipos de obstaculo e o peso de cada um.
+# pra pegar o peso de um obstaculo, e so fazer OBSTACULOS["tornado"] -> 7
+OBSTACULOS = {
+    "tornado": 7,
+    "óleo": 5,
+    "pregos": 3,
+    "lama": 8,
+}
 
 
 def sortear_labels(qtd, semente):
-    # sorteia pra quantidade de ruas labels metade NORMAL metade OBSTRUIDA
+    # essa funcao devolve uma lista com "qtd" labels: metade "normal" e
+    # a outra metade um obstaculo sorteado (tornado ou óleo).
+
+    # random.seed(numero) faz os sorteios ficarem sempre iguais toda vez
+    # que o programa roda (sem isso, o resultado mudaria a cada execucao).
     random.seed(semente)
-    metade = qtd // 2
-    labels = ["normal"] * metade + ["obstruida"] * (qtd - metade)
-    random.shuffle(labels)  # embaralha para nao seguir sempre a mesma ordem
+
+    qnt_normal = qtd // 2
+    qnt_obstruida = qtd - qnt_normal
+
+    # comeca a lista so com as ruas normais.
+    labels = ["normal"] * qnt_normal
+
+    # pega so os NOMES do dicionario, sem os pesos.
+    # ["tornado", "óleo", "pregos", "lama"]
+    nomes_dos_obstaculos = list(OBSTACULOS.keys())
+
+    # pra cada rua obstruida que falta, sorteia um nome da lista acima.
+    for _ in range(qnt_obstruida):
+        # random.choice(lista) devolve UM item aleatorio dessa lista.
+        
+        obstaculo_sorteado = random.choice(nomes_dos_obstaculos)
+        labels.append(obstaculo_sorteado)
+
+    # random.shuffle(lista) embaralha a lista, trocando a ordem dos itens
+    random.shuffle(labels)
+
     return labels
 
 
@@ -57,12 +86,18 @@ def criar_arestas(semente=42):
     arestas = []
     #zip junta o 1 da primeira lista com 1 da segunda lista, 2 com 2, etc
     for (a, b), label in zip(RUAS, labels):
-        peso = PESO_RUA_NORMAL if label == "normal" else PESO_RUA_OBSTACULO
+        if label == "normal":
+            peso = PESO_RUA_NORMAL
+        else:
+            # label aqui e "tornado" ou "óleo", entao busca o peso dele
+            # dentro do dicionario OBSTACULOS.
+            peso = OBSTACULOS[label]
+
         arestas.append({
             "source": a,
             "target": b,
-            "label": label,   
-            "peso": peso,      
+            "label": label,
+            "peso": peso,
         })
     return arestas
 

@@ -1,2 +1,3 @@
-# G39_Grafos_PA-26.2
-# G39_Grafos_PA-26.2
+### como rodar:
+```python3 grafo.py```
+```open index.html```
