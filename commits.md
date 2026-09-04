@@ -13,3 +13,8 @@ Como rodar - readme
 ### +nos e responsivo
 **autor:** Isabelle
 Mais nós no jogo e tela responsiva
+
+### layout: rascunho
+**autor:** Isabelle
+Inicio de testes do layout e front tentando fazer parecer com o jogo da polly
+apenas ruas e nos foram montados

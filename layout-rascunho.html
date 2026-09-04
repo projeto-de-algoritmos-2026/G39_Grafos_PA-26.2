@@ -46,33 +46,34 @@
       return e;
     }
 
-    // faixa de pedestre perto de um no: 2 linhas (uma de cada lado) + 4 quadrados
+    // faixa de pedestre perto de um no: 2 linhas (uma de cada lado) + 4 retangulos
     // entre elas, um do lado do outro no sentido da linha da rua
     function faixaDePedestre(cx, cy, horizontal) {
-      const comprimento = 30; // distancia entre as duas linhas
+      const comprimento = 20; // distancia entre as duas linhas
       const largura = LARGURA_RUA - 16; // ate onde as linhas se estendem pela rua
-      const nQuadrados = 4;
-      const tamQuadrado = 6;
+      const nRetangulos = 5;
+      const compRetangulo = comprimento - 6; // quase preenche o vao entre as duas linhas
+      const espRetangulo = 4; // espessura (no sentido em que ficam empilhados)
 
       if (horizontal) {
         // as duas linhas
         el("rect", { x: cx - comprimento / 2 - 1, y: cy - largura / 2, width: 2, height: largura, fill: COR_FAIXA });
         el("rect", { x: cx + comprimento / 2 - 1, y: cy - largura / 2, width: 2, height: largura, fill: COR_FAIXA });
 
-        // os 4 quadrados, no sentido das linhas (empilhados ao longo delas)
-        for (let i = 0; i < nQuadrados; i++) {
-          const y = cy - largura / 2 + (largura / nQuadrados) * (i + 0.5);
-          el("rect", { x: cx - tamQuadrado / 2, y: y - tamQuadrado / 2, width: tamQuadrado, height: tamQuadrado, fill: COR_FAIXA });
+        // os 4 retangulos, no sentido das linhas (empilhados ao longo delas)
+        for (let i = 0; i < nRetangulos; i++) {
+          const y = cy - largura / 2 + (largura / nRetangulos) * (i + 0.5);
+          el("rect", { x: cx - compRetangulo / 2, y: y - espRetangulo / 2, width: compRetangulo, height: espRetangulo, fill: COR_FAIXA });
         }
       } else {
         // as duas linhas
         el("rect", { x: cx - largura / 2, y: cy - comprimento / 2 - 1, width: largura, height: 2, fill: COR_FAIXA });
         el("rect", { x: cx - largura / 2, y: cy + comprimento / 2 - 1, width: largura, height: 2, fill: COR_FAIXA });
 
-        // os 4 quadrados, no sentido das linhas (empilhados ao longo delas)
-        for (let i = 0; i < nQuadrados; i++) {
-          const x = cx - largura / 2 + (largura / nQuadrados) * (i + 0.5);
-          el("rect", { x: x - tamQuadrado / 2, y: cy - tamQuadrado / 2, width: tamQuadrado, height: tamQuadrado, fill: COR_FAIXA });
+        // os 4 retangulos, no sentido das linhas (empilhados ao longo delas)
+        for (let i = 0; i < nRetangulos; i++) {
+          const x = cx - largura / 2 + (largura / nRetangulos) * (i + 0.5);
+          el("rect", { x: x - espRetangulo / 2, y: cy - compRetangulo / 2, width: espRetangulo, height: compRetangulo, fill: COR_FAIXA });
         }
       }
     }
