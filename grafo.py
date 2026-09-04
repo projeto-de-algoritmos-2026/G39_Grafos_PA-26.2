@@ -3,35 +3,64 @@ import random
 
 # a cidade eh fixa, cada esquina é um no (com cordenadas x,y pra organizar no front)
 NOS = [
-    {"id": "A", "x": 100, "y": 100},
-    {"id": "B", "x": 250, "y": 100},
-    {"id": "C", "x": 400, "y": 100},
-    {"id": "D", "x": 550, "y": 100},
-    {"id": "E", "x": 100, "y": 250},
-    {"id": "F", "x": 250, "y": 250},
-    {"id": "G", "x": 400, "y": 250},
-    {"id": "H", "x": 550, "y": 250},
-    {"id": "I", "x": 100, "y": 400},
-    {"id": "J", "x": 250, "y": 400},
-    {"id": "K", "x": 400, "y": 400},
-    {"id": "L", "x": 550, "y": 400},
+    # linha 0
+    {"id": 1, "x": 100, "y": 100},
+    {"id": 2, "x": 250, "y": 100},
+    {"id": 3, "x": 400, "y": 100},
+    {"id": 4, "x": 550, "y": 100},
+    {"id": 5, "x": 700, "y": 100},
+    {"id": 6, "x": 850, "y": 100},
+    {"id": 7, "x": 1000, "y": 100},
+    {"id": 8, "x": 1150, "y": 100},
+    # linha 1
+    {"id": 9, "x": 100, "y": 250},
+    {"id": 10, "x": 250, "y": 250},
+    {"id": 11, "x": 400, "y": 250},
+    {"id": 12, "x": 550, "y": 250},
+    {"id": 13, "x": 700, "y": 250},
+    {"id": 14, "x": 850, "y": 250},
+    {"id": 15, "x": 1000, "y": 250},
+    {"id": 16, "x": 1150, "y": 250},
+    # linha 2
+    {"id": 17, "x": 100, "y": 400},
+    {"id": 18, "x": 250, "y": 400},
+    {"id": 19, "x": 400, "y": 400},
+    {"id": 20, "x": 550, "y": 400},
+    {"id": 21, "x": 700, "y": 400},
+    {"id": 22, "x": 850, "y": 400},
+    {"id": 23, "x": 1000, "y": 400},
+    {"id": 24, "x": 1150, "y": 400},
+    # linha 3
+    {"id": 25, "x": 100, "y": 550},
+    {"id": 26, "x": 250, "y": 550},
+    {"id": 27, "x": 400, "y": 550},
+    {"id": 28, "x": 550, "y": 550},
+    {"id": 29, "x": 700, "y": 550},
+    {"id": 30, "x": 850, "y": 550},
+    {"id": 31, "x": 1000, "y": 550},
+    {"id": 32, "x": 1150, "y": 550},
 ]
 
 # tamanho da tela
-LAYOUT = {"width": 650, "height": 500}
+LAYOUT = {"width": 1250, "height": 650}
 
 # ja que a cidade numa muda as ruas tambem nao
 # tem ruas entre todos os nos
 RUAS = [
     # ruas horizontais
-    ("A", "B"), ("B", "C"), ("C", "D"),
-    ("E", "F"), ("F", "G"), ("G", "H"),
-    ("I", "J"), ("J", "K"), ("K", "L"),
+    (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8),
+    (9, 10), (10, 11), (11, 12), (12, 13), (13, 14), (14, 15), (15, 16),
+    (17, 18), (18, 19), (19, 20), (20, 21), (21, 22), (22, 23), (23, 24),
+    (25, 26), (26, 27), (27, 28), (28, 29), (29, 30), (30, 31), (31, 32),
     # ruas verticais
-    ("A", "E"), ("E", "I"),
-    ("B", "F"), ("F", "J"),
-    ("C", "G"), ("G", "K"),
-    ("D", "H"), ("H", "L"),
+    (1, 9), (9, 17), (17, 25),
+    (2, 10), (10, 18), (18, 26),
+    (3, 11), (11, 19), (19, 27),
+    (4, 12), (12, 20), (20, 28),
+    (5, 13), (13, 21), (21, 29),
+    (6, 14), (14, 22), (22, 30),
+    (7, 15), (15, 23), (23, 31),
+    (8, 16), (16, 24), (24, 32),
 ]
 
 # custo fixo da rua normal.
@@ -49,7 +78,7 @@ OBSTACULOS = {
 
 def sortear_labels(qtd, semente):
     # essa funcao devolve uma lista com "qtd" labels: metade "normal" e
-    # a outra metade um obstaculo sorteado (tornado ou óleo).
+    # a outra metade um obstaculo sorteado.
 
     # random.seed(numero) faz os sorteios ficarem sempre iguais toda vez
     # que o programa roda (sem isso, o resultado mudaria a cada execucao).

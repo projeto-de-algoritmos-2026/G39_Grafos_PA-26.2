@@ -3,11 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <title>Grafo de 12 Nós (Dijkstra)</title>
+  <style>
+    /* tira a margem padrao da pagina, pra dar pra usar a tela toda */
+    html, body {
+      margin: 0;
+      height: 100%;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- caixa pro grafo -->
-  <svg id="grafo" width="650" height="500" style="background: white; border: 1px solid black;"></svg>
+  <!-- caixa pro grafo. width/height continuam sendo o "tamanho de verdade"
+       do desenho (1250x650), mas o viewBox + o style abaixo fazem esse
+       desenho esticar/encolher pra caber na tela toda, sem distorcer. -->
+  <svg id="grafo" width="1250" height="650" viewBox="0 0 1250 650"
+       style="background: white; border: 1px solid black; width: 100vw; height: 100vh; display: block;"></svg>
 
   <!-- dados.js e gerado pelo grafo.py, e cria a variavel dadosDoGrafo -->
   <script src="dados.js"></script>
