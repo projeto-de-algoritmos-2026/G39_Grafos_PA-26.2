@@ -11,23 +11,38 @@
 </head>
 <body>
   <h1>Grafo da cidade</h1>
-  <svg width="800" height="550"></svg>
+  <svg width="950" height="650"></svg>
 
   <script>
-    // grafo: 6 nos, 2 linhas de 3, arestas lado-com-lado e frente-com-frente
-    const NOS = [
-      { id: 1, x: 150, y: 150 },
-      { id: 2, x: 400, y: 150 },
-      { id: 3, x: 650, y: 150 },
-      { id: 4, x: 150, y: 400 },
-      { id: 5, x: 400, y: 400 },
-      { id: 6, x: 650, y: 400 },
-    ];
-    const RUAS = [
-      [1, 2], [2, 3],
-      [4, 5], [5, 6],
-      [1, 4], [2, 5], [3, 6],
-    ];
+    // grafo: 24 nos, 4 linhas de 6, arestas lado-com-lado e frente-com-frente
+    const COLUNAS = 6;
+    const LINHAS = 4;
+    const ESPACAMENTO = 150;
+    const MARGEM = 100;
+
+    // id do no na linha r, coluna c (0-indexado), numerado tipo leitura: 1..24
+    const idNo = (r, c) => r * COLUNAS + c + 1;
+
+    const NOS = [];
+    for (let r = 0; r < LINHAS; r++) {
+      for (let c = 0; c < COLUNAS; c++) {
+        NOS.push({ id: idNo(r, c), x: MARGEM + c * ESPACAMENTO, y: MARGEM + r * ESPACAMENTO });
+      }
+    }
+
+    const RUAS = [];
+    // ruas horizontais (lado com lado, dentro da mesma linha)
+    for (let r = 0; r < LINHAS; r++) {
+      for (let c = 0; c < COLUNAS - 1; c++) {
+        RUAS.push([idNo(r, c), idNo(r, c + 1)]);
+      }
+    }
+    // ruas verticais (frente com frente, entre linhas)
+    for (let c = 0; c < COLUNAS; c++) {
+      for (let r = 0; r < LINHAS - 1; r++) {
+        RUAS.push([idNo(r, c), idNo(r + 1, c)]);
+      }
+    }
 
     // estilo da rua, copiando o visual do jogo da Polly
     const LARGURA_RUA = 70;
@@ -49,10 +64,12 @@
     const defs = el("defs", {});
 
     // quadras: os espacos vazios no meio da rua, cada um delimitado por 4 nos
-    const QUADRAS = [
-      [1, 2, 5, 4],
-      [2, 3, 6, 5],
-    ];
+    const QUADRAS = [];
+    for (let r = 0; r < LINHAS - 1; r++) {
+      for (let c = 0; c < COLUNAS - 1; c++) {
+        QUADRAS.push([idNo(r, c), idNo(r, c + 1), idNo(r + 1, c + 1), idNo(r + 1, c)]);
+      }
+    }
     const IMG_CANTEIRO = "imagens/canteiro-flores.png";
     const IMG_TAMANHO = 562; // tamanho do arquivo original (quadrado)
     // o png tem uma margem transparente em volta do canteiro; esse e o

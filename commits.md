@@ -32,3 +32,7 @@ ajustes finais da rua
 adicionei terrenos padroes entre ruas
 adicionei primeiras imagens na pasta imagens/canteiros para terrenos
 
+### layout: +nos
+**autor:** Isabelle
+adicionei mais nos no layout
+
