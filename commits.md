@@ -26,3 +26,9 @@ ajuste da faixa de pedestres, commit para nao perder configuracoes
 ### layout: rua
 **autor:** Isabelle
 ajustes finais da rua
+
+### layout: terreno
+**autor:** Isabelle
+adicionei terrenos padroes entre ruas
+adicionei primeiras imagens na pasta imagens/canteiros para terrenos
+

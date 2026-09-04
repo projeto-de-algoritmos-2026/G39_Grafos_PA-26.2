@@ -39,11 +39,56 @@
     const ns = "http://www.w3.org/2000/svg";
     const porId = Object.fromEntries(NOS.map(n => [n.id, n]));
 
-    function el(tag, attrs) {
+    function el(tag, attrs, pai = svg) {
       const e = document.createElementNS(ns, tag);
       for (const k in attrs) e.setAttribute(k, attrs[k]);
-      svg.appendChild(e);
+      pai.appendChild(e);
       return e;
+    }
+
+    const defs = el("defs", {});
+
+    // quadras: os espacos vazios no meio da rua, cada um delimitado por 4 nos
+    const QUADRAS = [
+      [1, 2, 5, 4],
+      [2, 3, 6, 5],
+    ];
+    const IMG_CANTEIRO = "imagens/canteiro-flores.png";
+    const IMG_TAMANHO = 562; // tamanho do arquivo original (quadrado)
+    // o png tem uma margem transparente em volta do canteiro; esse e o
+    // retangulo (dentro do arquivo original) onde a imagem "de verdade" comeca,
+    // pra gente conseguir esticar so essa parte e preencher a quadra ate a pista
+    const IMG_MARGEM = { x: 49, y: 53, width: 467, height: 460 };
+
+    // preenche uma quadra com a imagem do canteiro de flores, esticada pra
+    // cobrir a quadra inteira (sem sobrar a margem transparente do arquivo)
+    function desenhaQuadra(ids) {
+      const pontos = ids.map(id => porId[id]);
+      const xs = pontos.map(p => p.x), ys = pontos.map(p => p.y);
+      const blocoX = Math.min(...xs) + LARGURA_RUA / 2;
+      const blocoY = Math.min(...ys) + LARGURA_RUA / 2;
+      const blocoW = Math.max(...xs) - Math.min(...xs) - LARGURA_RUA;
+      const blocoH = Math.max(...ys) - Math.min(...ys) - LARGURA_RUA;
+
+      // corta fora o que passar da quadra (a margem transparente da imagem)
+      const clipId = `clip-quadra-${ids.join("-")}`;
+      const clip = el("clipPath", { id: clipId }, defs);
+      el("rect", { x: blocoX, y: blocoY, width: blocoW, height: blocoH }, clip);
+
+      // escala calculada pra so a parte "de verdade" da imagem (sem a margem)
+      // preencher exatamente a quadra
+      const escalaX = blocoW / IMG_MARGEM.width;
+      const escalaY = blocoH / IMG_MARGEM.height;
+
+      el("image", {
+        href: IMG_CANTEIRO,
+        x: blocoX - IMG_MARGEM.x * escalaX,
+        y: blocoY - IMG_MARGEM.y * escalaY,
+        width: IMG_TAMANHO * escalaX,
+        height: IMG_TAMANHO * escalaY,
+        preserveAspectRatio: "none",
+        "clip-path": `url(#${clipId})`,
+      });
     }
 
     // faixa de pedestre perto de um no: 2 linhas (uma de cada lado) + 4 retangulos
@@ -120,7 +165,12 @@
       }
     }
 
-    // 1) embaixo de cada no, um "quadrado" com cantos arredondados.
+    // 1) preenche as quadras (o fundo, atras de tudo)
+    for (const ids of QUADRAS) {
+      desenhaQuadra(ids);
+    }
+
+    // 2) embaixo de cada no, um "quadrado" com cantos arredondados.
     // as ruas que saem do no sao retangulos retos desenhados por cima, entao
     // cobrem (deixam reto) o lado onde tem rua; so sobra curva nas pontas de
     // fora, onde a rua nao continua.
@@ -134,12 +184,12 @@
       });
     }
 
-    // 2) desenha todas as ruas por cima (ficam atras dos nos)
+    // 3) desenha todas as ruas por cima (ficam atras dos nos)
     for (const [a, b] of RUAS) {
       desenhaRua(porId[a], porId[b]);
     }
 
-    // 3) desenha os nos (esquinas) por cima
+    // 4) desenha os nos (esquinas) por cima
     for (const no of NOS) {
       el("circle", { cx: no.x, cy: no.y, r: 22, class: "no" });
       const label = el("text", { x: no.x, y: no.y + 5, class: "no-label" });
