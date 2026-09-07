@@ -25,7 +25,7 @@
 | Matrícula | Aluno |
 |:---:|:---|
 | `231026680` | _Cibelly Lourenço_ |
-| `123456789` | _Isabelly Costa_ |
+| `123456789` | _Isabelle da Costa_ |
 
 ---
 
