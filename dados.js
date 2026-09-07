@@ -478,16 +478,5 @@ const dadosDoGrafo = {
       "label": "normal",
       "peso": 1
     }
-  ],
-  "partida": 26,
-  "chegada": 4,
-  "caminhoMinimo": [
-    26,
-    18,
-    10,
-    2,
-    3,
-    4
-  ],
-  "custoMinimo": 9
+  ]
 };

@@ -1,3 +1,4 @@
+import heapq
 import json
 import random
 
@@ -131,11 +132,105 @@ def criar_arestas(semente=42):
     return arestas
 
 
+# quanto mais longe (em numero de arestas) partida e chegada tem que estar
+# uma da outra pro sorteio aceitar o par
+DISTANCIA_MINIMA_ARESTAS = 6
+
+
+def construir_lista_adjacencia(arestas):
+    # pra cada no, guarda uma lista de (vizinho, peso) -- o grafo nao e
+    # direcionado, entao toda aresta entra dos dois lados.
+    adjacencia = {no["id"]: [] for no in NOS}
+    for aresta in arestas:
+        a, b, peso = aresta["source"], aresta["target"], aresta["peso"]
+        adjacencia[a].append((b, peso))
+        adjacencia[b].append((a, peso))
+    return adjacencia
+
+
+def distancia_em_arestas(adjacencia, origem):
+    # bfs sem peso: numero minimo de ruas pra sair de "origem" ate cada no.
+    # serve so pra saber o quao "longe" dois pontos estao um do outro,
+    # sem levar os obstaculos em conta (isso quem faz e o dijkstra).
+    distancias = {origem: 0}
+    fila = [origem]
+    while fila:
+        atual = fila.pop(0)
+        for vizinho, _peso in adjacencia[atual]:
+            if vizinho not in distancias:
+                distancias[vizinho] = distancias[atual] + 1
+                fila.append(vizinho)
+    return distancias
+
+
+def sortear_partida_chegada(adjacencia, semente=None):
+    # sorteia dois nos garantindo que fiquem a pelo menos
+    # DISTANCIA_MINIMA_ARESTAS ruas de distancia um do outro.
+    rng = random.Random(semente)
+    ids = [no["id"] for no in NOS]
+
+    while True:
+        partida = rng.choice(ids)
+        chegada = rng.choice(ids)
+        if partida == chegada:
+            continue
+
+        distancias = distancia_em_arestas(adjacencia, partida)
+        if distancias[chegada] >= DISTANCIA_MINIMA_ARESTAS:
+            return partida, chegada
+
+
+def dijkstra(adjacencia, origem, destino):
+    # caminho minimo (considerando o peso/custo de cada rua, obstaculos
+    # inclusos) de "origem" ate "destino" usando uma fila de prioridade.
+    distancias = {no: float("inf") for no in adjacencia}
+    distancias[origem] = 0
+    anterior = {}
+    visitados = set()
+
+    fila = [(0, origem)]
+    while fila:
+        custo_atual, atual = heapq.heappop(fila)
+
+        if atual in visitados:
+            continue
+        visitados.add(atual)
+
+        if atual == destino:
+            break
+
+        for vizinho, peso in adjacencia[atual]:
+            novo_custo = custo_atual + peso
+            if novo_custo < distancias[vizinho]:
+                distancias[vizinho] = novo_custo
+                anterior[vizinho] = atual
+                heapq.heappush(fila, (novo_custo, vizinho))
+
+    # reconstroi o caminho voltando de destino ate origem pelos "anterior"
+    caminho = [destino]
+    while caminho[-1] != origem:
+        caminho.append(anterior[caminho[-1]])
+    caminho.reverse()
+
+    return caminho, distancias[destino]
+
+
 def main():
+    # o sorteio de partida/chegada e o dijkstra rodam no navegador (ver
+    # layout-rascunho.html), pra cada jogador que abrir a pagina receber um
+    # desafio novo sem precisar rodar esse script de novo. aqui em python
+    # essas mesmas funcoes servem so pra testar/validar a logica antes de
+    # portar pra js -- por isso o resultado abaixo e so impresso, nao vai
+    # pro dados.js.
+    arestas = criar_arestas()
+    adjacencia = construir_lista_adjacencia(arestas)
+    partida, chegada = sortear_partida_chegada(adjacencia)
+    caminho, custo_total = dijkstra(adjacencia, partida, chegada)
+
     grafo = {
         "layout": LAYOUT,
         "nos": NOS,
-        "arestas": criar_arestas(),
+        "arestas": arestas,
     }
 
     # joga no js
@@ -145,6 +240,9 @@ def main():
         f.write(";\n")
 
     print("dados.js gerado com sucesso.")
+    print(f"[teste python] partida: {partida} | chegada: {chegada}")
+    print(f"[teste python] caminho minimo (dijkstra): {caminho}")
+    print(f"[teste python] custo total: {custo_total}")
 
 
 if __name__ == "__main__":
