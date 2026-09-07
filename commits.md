@@ -110,3 +110,18 @@ tornei os obstaculos visiveis pra mostrar quais arestas tem maior peso
 **autor:** Isabelle
 
 mudei a aparencia dos nos
+
+### moldura
+**autor:** Isabelle
+
+adiconar moldura
+
+### layout: fundo
+**autor:** Isabelle
+
+fundo parecido com o original
+
+### layout: botao mostrar resposta
+**autor:** Isabelle
+
+botao mostrar resposta

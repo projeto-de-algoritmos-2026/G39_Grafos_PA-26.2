@@ -4,9 +4,6 @@
 
 <h1 align="center">🌷 Polly Party Pickup 💜</h1>
 
-<p align="center">
-  <em>Lila & Lea: Aventura na Cidade</em>
-</p>
 
 <p align="center">
   <b>G39</b> · <b>Grafos </b>
@@ -33,7 +30,7 @@
 
 **Polly Party Pickup** é baseado em um jogo antigo de navegador da franquia Polly Pocket, muito popular nos anos 2000, mas reimaginado como um problema de grafos.
 
-A história: **Lila** sai de casa dirigindo pelas ruas da cidade em busca da sua amiga **Lea**. Assim que as duas se encontram, elas seguem juntas até um destino sorteado entre 4 lugares possíveis: 🏦 banco, parque, prédio ou quadra de esportes. Só que nem toda rua é tranquila — algumas têm obstáculos (tornado, óleo, pregos, lama) que tornam o trajeto mais demorado.
+A história: **Polly** sai de casa dirigindo pelas ruas da cidade em busca da sua amiga **Lea**. Assim que as duas se encontram, elas seguem juntas até um destino sorteado entre 4 lugares possíveis: 🏦 banco, parque, prédio ou quadra de esportes. Só que nem toda rua é tranquila — algumas têm obstáculos (tornado, óleo, pregos, lama) que tornam o trajeto mais demorado.
 
 ### Como o grafo é modelado
 
@@ -49,7 +46,7 @@ O problema do jogo é, no fundo, sempre o mesmo: **dado um ponto de partida e um
 
 Como a jornada tem **3 pontos**, a casa da Lila → a casa da Lea → o destino sorteado, o Dijkstra roda **duas vezes por partida**:
 
-1. **Trecho 1:** da casa da Lila até a casa da Lea.
+1. **Trecho 1:** do inicio até a casa da Lea.
 2. **Trecho 2:** da casa da Lea até o destino sorteado (com as duas já juntas).
 
 O custo total do desafio é a soma dos dois trechos, e é contra esse valor que o desempenho do jogador é comparado no final.
@@ -61,7 +58,6 @@ O custo total do desafio é a soma dos dois trechos, e é contra esse valor que 
 > ⚠️ As imagens abaixo ainda são placeholders — falta adicionar os prints de tela reais do jogo rodando.
 
 <p align="center">
-  <img src="assets/tela-inicio.png" alt="Tela inicial do jogo" width="30%">
   <img src="assets/tela-jogo.png" alt="Tela do jogo com o carrinho em movimento pelo mapa" width="30%">
 </p>
 
@@ -82,12 +78,12 @@ O custo total do desafio é a soma dos dois trechos, e é contra esse valor que 
 git clone git@github.com:projeto-de-algoritmos-2026/G39_Grafos_PA-26.2.git
 cd G39_Grafos_PA-26.2
 ```
-Depois, basta abrir o arquivo `layout-rascunho.html` direto no navegador (duplo clique nele, ou `open layout-rascunho.html` no terminal) 
+Depois, basta abrir o arquivo `index.html` direto no navegador (duplo clique nele, ou `open index.html` no terminal) 
 
 
 ## 🕹️ Uso
 
-1. Abra `layout-rascunho.html` no navegador. O carrinho da Lila 💗 aparece já posicionado na casinha rosa dela.
+1. Abra `index.html` no navegador. O carrinho da Lila 💗 aparece já posicionado na casinha rosa dela.
 2. Clique em um nó **vizinho** ao nó onde o carrinho está agora para mover a Lila até lá. Não dá pra "pular" direto pra qualquer esquina do mapa — só pelas ruas, uma de cada vez.
 3. Cada clique válido soma o custo daquela rua (mais caro se ela tiver um obstáculo) e registra o trajeto percorrido.
 4. Quando a Lila chegar na casinha roxa da Lea 💜, aparece uma mensagem de encontro e o carro roxo da Lea passa a acompanhar, sempre um nó atrás do carrinho da Lila.

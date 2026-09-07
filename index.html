@@ -1,70 +1,805 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Grafo de 12 Nós (Dijkstra)</title>
-  <style>
-    /* tira a margem padrao da pagina, pra dar pra usar a tela toda */
-    html, body {
-      margin: 0;
-      height: 100%;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Grafo da Cidade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  body {
+    font-family: sans-serif;
+    background: #f4f4f4 url("imagens/fundo.png") center center / cover no-repeat fixed;
+  }
+  .no { fill: rgba(255, 255, 255, 0.5); stroke: none; cursor: pointer; }
+  svg { display: block; margin: 0 auto; }
+
+  /* painel de regras: mesma fonte divertida da placa "Polly Pickup" do
+     mapa, texto centralizado e branco, num cartao escuro pra continuar
+     legivel por cima da imagem de fundo */
+  .painel-regras {
+    max-width: 760px;
+    margin: 20px auto;
+    padding: 18px 28px;
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 20px;
+    color: #fff;
+    font-family: 'Fredoka', sans-serif;
+    text-align: center;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+  }
+
+  #mensagem {
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .icone-inline {
+    height: 1.3em;
+    vertical-align: middle;
+    margin: 0 2px;
+  }
+
+  .legenda-obstaculos {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 2px dashed rgba(255, 255, 255, 0.35);
+  }
+
+  .legenda-titulo {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+
+  .lista-obstaculos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 18px;
+  }
+
+  .item-obstaculo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 90px;
+  }
+
+  .item-obstaculo img {
+    width: 46px;
+    height: 46px;
+    object-fit: contain;
+  }
+
+  .item-obstaculo .nome-obstaculo {
+    font-size: 13px;
+    font-weight: 400;
+    text-transform: capitalize;
+  }
+
+  .item-obstaculo .pontos-obstaculo {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .botao-resposta {
+    display: block;
+    margin: 18px auto 30px;
+    padding: 10px 28px;
+    font-family: 'Fredoka', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    background: #ef1397;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  }
+  .botao-resposta:hover { filter: brightness(1.1); }
+</style>
 </head>
 <body>
+  <div class="painel-regras">
+    <div id="mensagem"></div>
+    <div class="legenda-obstaculos">
+      <div class="legenda-titulo">Cada obstáculo custa pontos diferentes:</div>
+      <div id="lista-obstaculos" class="lista-obstaculos"></div>
+    </div>
+  </div>
+  <svg></svg>
+  <button id="botao-resposta" class="botao-resposta">Mostrar resposta</button>
 
-  <!-- caixa pro grafo. width/height continuam sendo o "tamanho de verdade"
-       do desenho (1250x650), mas o viewBox + o style abaixo fazem esse
-       desenho esticar/encolher pra caber na tela toda, sem distorcer. -->
-  <svg id="grafo" width="1250" height="650" viewBox="0 0 1250 650"
-       style="background: white; border: 1px solid black; width: 100vw; height: 100vh; display: block;"></svg>
-
-  <!-- dados.js e gerado pelo grafo.py, e cria a variavel dadosDoGrafo -->
+  <!-- dados.js e gerado pelo grafo.py: e a fonte unica dos nos/arestas/layout -->
   <script src="dados.js"></script>
   <script>
+    // grafo: 32 nos, 4 linhas de 8, arestas lado-com-lado e frente-com-frente
+    // (nos, arestas e o tamanho da tela vem de dados.js, gerado por grafo.py,
+    // pra layout-rascunho.html nunca ficar dessincronizado do grafo de verdade)
+    const COLUNAS = 8;
+    const LINHAS = 4;
 
-    var conteudoSvg = "";
+    // id do no na linha r, coluna c (0-indexado), numerado tipo leitura: 1..32
+    // (mesma formula usada em grafo.py pra gerar os ids)
+    const idNo = (r, c) => r * COLUNAS + c + 1;
 
+    const NOS = dadosDoGrafo.nos;
 
-    for (var i = 0; i < dadosDoGrafo.arestas.length; i++) {
-      var aresta = dadosDoGrafo.arestas[i];
+    document.querySelector("svg").setAttribute("width", dadosDoGrafo.layout.width);
+    document.querySelector("svg").setAttribute("height", dadosDoGrafo.layout.height);
 
+    // espacamento real entre nos vizinhos, calculado a partir das coordenadas
+    // que vieram de dados.js (nao mais um valor arbitrario fixado aqui)
+    const ESPACAMENTO_X = NOS[1].x - NOS[0].x;
+    const ESPACAMENTO_Y = NOS[COLUNAS].y - NOS[0].y;
+    const LARGURA_RUA = ESPACAMENTO_Y / 3;
 
-      var noOrigem = null;
-      var noDestino = null;
-      for (var j = 0; j < dadosDoGrafo.nos.length; j++) {
-        if (dadosDoGrafo.nos[j].id === aresta.source) {
-          noOrigem = dadosDoGrafo.nos[j];
+    // estilo da rua, copiando o visual do jogo da Polly
+    const COR_ASFALTO = "#a8a6a3";
+    const COR_FAIXA = "rgba(255, 255, 255, 0.8)";
+    const DIST_FAIXA_PEDESTRE = 48; // distancia da faixa de pedestre ate o no
+    const COMPRIMENTO_FAIXA_PEDESTRE = 10; // distancia entre as duas linhas da faixa
+    const FOLGA_LINHA_CENTRAL = 6; // espacinho pra faixa central nao encostar na faixa de pedestre
+
+    // imagem de cada tipo de obstaculo (mesmos labels usados em grafo.py/dados.js)
+    const IMAGENS_OBSTACULO = {
+      tornado: "imagens/obstaculos/obs-furacao.png",
+      "óleo": "imagens/obstaculos/obs-oleo.png",
+      pregos: "imagens/obstaculos/obs-prego.png",
+      lama: "imagens/obstaculos/obs-lama.png",
+    };
+    const TAMANHO_OBSTACULO = LARGURA_RUA * 0.9; // cabe dentro da largura da rua
+
+    // pontos perdidos por obstaculo, pra mostrar na legenda de regras --
+    // precisam ser os mesmos valores do dicionario OBSTACULOS em grafo.py
+    const PONTOS_OBSTACULO = {
+      tornado: 7,
+      "óleo": 5,
+      pregos: 3,
+      lama: 8,
+    };
+
+    // preenche a legenda de regras (foto do obstaculo + quantos pontos ele
+    // custa), uma pra cada tipo listado em IMAGENS_OBSTACULO
+    const listaObstaculosEl = document.getElementById("lista-obstaculos");
+    if (listaObstaculosEl) {
+      listaObstaculosEl.innerHTML = Object.keys(IMAGENS_OBSTACULO).map(label => {
+        const nome = label.charAt(0).toUpperCase() + label.slice(1);
+        return `<div class="item-obstaculo">
+          <img src="${IMAGENS_OBSTACULO[label]}" alt="${nome}">
+          <span class="nome-obstaculo">${nome}</span>
+          <span class="pontos-obstaculo">-${PONTOS_OBSTACULO[label]} pontos</span>
+        </div>`;
+      }).join("");
+    }
+
+    const svg = document.querySelector("svg");
+    const ns = "http://www.w3.org/2000/svg";
+    const porId = Object.fromEntries(NOS.map(n => [n.id, n]));
+
+    function el(tag, attrs, pai = svg) {
+      const e = document.createElementNS(ns, tag);
+      for (const k in attrs) e.setAttribute(k, attrs[k]);
+      pai.appendChild(e);
+      return e;
+    }
+
+    // quadras: os espacos vazios no meio da rua, cada um delimitado por 4 nos
+    const QUADRAS = [];
+    for (let r = 0; r < LINHAS - 1; r++) {
+      for (let c = 0; c < COLUNAS - 1; c++) {
+        QUADRAS.push([idNo(r, c), idNo(r, c + 1), idNo(r + 1, c + 1), idNo(r + 1, c)]);
+      }
+    }
+
+    // acha a primeira quadra (bloco de 4 nos) que tem esse no como um dos
+    // cantos -- e onde a casa da lila/lea ou o destino vao ser desenhados.
+    // usada tambem no sorteio dos 3 pontos, pra garantir que eles nao
+    // compartilhem a mesma quadra (senao uma imagem sobrescreveria a outra)
+    function indiceDaQuadraDoNo(id) {
+      return QUADRAS.findIndex(quadra => quadra.includes(id));
+    }
+
+    // preenche uma quadra com a "imagem" recebida, esticada pra cobrir a
+    // quadra inteira -- qual imagem usar em cada quadra e decidido mais
+    // abaixo (casa da lila/lea nas quadras da partida/intermediario, e
+    // sorteio entre os canteiros genericos nas demais)
+    function desenhaQuadra(ids, imagem) {
+      const pontos = ids.map(id => porId[id]);
+      const xs = pontos.map(p => p.x), ys = pontos.map(p => p.y);
+      const blocoX = Math.min(...xs) + LARGURA_RUA / 2;
+      const blocoY = Math.min(...ys) + LARGURA_RUA / 2;
+      const blocoW = Math.max(...xs) - Math.min(...xs) - LARGURA_RUA;
+      const blocoH = Math.max(...ys) - Math.min(...ys) - LARGURA_RUA;
+
+      el("image", {
+        href: imagem,
+        x: blocoX, y: blocoY,
+        width: blocoW, height: blocoH,
+        preserveAspectRatio: "none",
+      });
+    }
+
+    // faixa de pedestre perto de um no: 2 linhas (uma de cada lado) + 4 retangulos
+    // entre elas, um do lado do outro no sentido da linha da rua
+    function faixaDePedestre(cx, cy, horizontal) {
+      const comprimento = COMPRIMENTO_FAIXA_PEDESTRE; // distancia entre as duas linhas
+      const largura = LARGURA_RUA - 16; // ate onde as linhas se estendem pela rua
+      const nRetangulos = 5;
+      const compRetangulo = comprimento - 4; // quase preenche o vao entre as duas linhas
+      const espRetangulo = 4; // espessura (no sentido em que ficam empilhados)
+
+      if (horizontal) {
+        // as duas linhas
+        el("rect", { x: cx - comprimento / 2 - 1, y: cy - largura / 2, width: 1, height: largura, fill: COR_FAIXA });
+        el("rect", { x: cx + comprimento / 2 - 1, y: cy - largura / 2, width: 1, height: largura, fill: COR_FAIXA });
+
+        // os 4 retangulos, no sentido das linhas (empilhados ao longo delas)
+        for (let i = 0; i < nRetangulos; i++) {
+          const y = cy - largura / 2 + (largura / nRetangulos) * (i + 0.5);
+          el("rect", { x: cx - compRetangulo / 2, y: y - espRetangulo / 2, width: compRetangulo, height: espRetangulo, fill: COR_FAIXA });
         }
-        if (dadosDoGrafo.nos[j].id === aresta.target) {
-          noDestino = dadosDoGrafo.nos[j];
+      } else {
+        // as duas linhas
+        el("rect", { x: cx - largura / 2, y: cy - comprimento / 2 - 1, width: largura, height: 1, fill: COR_FAIXA });
+        el("rect", { x: cx - largura / 2, y: cy + comprimento / 2 - 1, width: largura, height: 1, fill: COR_FAIXA });
+
+        // os 4 retangulos, no sentido das linhas (empilhados ao longo delas)
+        for (let i = 0; i < nRetangulos; i++) {
+          const x = cx - largura / 2 + (largura / nRetangulos) * (i + 0.5);
+          el("rect", { x: x - espRetangulo / 2, y: cy - compRetangulo / 2, width: espRetangulo, height: compRetangulo, fill: COR_FAIXA });
+        }
+      }
+    }
+
+    // desenha uma rua (aresta) entre dois nos. "label" e o tipo da rua vindo
+    // do dados.js ("normal" ou o nome de um obstaculo)
+    function desenhaRua(a, b, label) {
+      const horizontal = a.y === b.y;
+      const [de, para] = horizontal
+        ? (a.x < b.x ? [a, b] : [b, a])
+        : (a.y < b.y ? [a, b] : [b, a]);
+
+      // pista de asfalto
+      if (horizontal) {
+        el("rect", {
+          x: de.x, y: de.y - LARGURA_RUA / 2,
+          width: para.x - de.x, height: LARGURA_RUA,
+          fill: COR_ASFALTO,
+        });
+      } else {
+        el("rect", {
+          x: de.x - LARGURA_RUA / 2, y: de.y,
+          width: LARGURA_RUA, height: para.y - de.y,
+          fill: COR_ASFALTO,
+        });
+      }
+
+      // faixa central: para um pouco antes da faixa de pedestre de cada lado,
+      // pra nao encostar/passar por cima dela
+      const insetLinha = DIST_FAIXA_PEDESTRE + COMPRIMENTO_FAIXA_PEDESTRE / 2 + FOLGA_LINHA_CENTRAL;
+      el("line", horizontal
+        ? { x1: de.x + insetLinha, y1: de.y, x2: para.x - insetLinha, y2: de.y }
+        : { x1: de.x, y1: de.y + insetLinha, x2: de.x, y2: para.y - insetLinha }
+      ).setAttribute("stroke", COR_FAIXA);
+      const linha = svg.lastElementChild;
+      linha.setAttribute("stroke-width", 1.5);
+      // linha.setAttribute("stroke-dasharray", "22 16");
+
+      // faixas de pedestre perto de cada esquina
+      if (horizontal) {
+        faixaDePedestre(de.x + DIST_FAIXA_PEDESTRE, de.y, true);
+        faixaDePedestre(para.x - DIST_FAIXA_PEDESTRE, para.y, true);
+      } else {
+        faixaDePedestre(de.x, de.y + DIST_FAIXA_PEDESTRE, false);
+        faixaDePedestre(para.x, para.y - DIST_FAIXA_PEDESTRE, false);
+      }
+
+      // se a rua tiver obstaculo, desenha o icone dele bem no meio da rua
+      const imagemObstaculo = IMAGENS_OBSTACULO[label];
+      if (imagemObstaculo) {
+        el("image", {
+          href: imagemObstaculo,
+          x: (de.x + para.x) / 2 - TAMANHO_OBSTACULO / 2,
+          y: (de.y + para.y) / 2 - TAMANHO_OBSTACULO / 2,
+          width: TAMANHO_OBSTACULO,
+          height: TAMANHO_OBSTACULO,
+        });
+      }
+    }
+
+    // --- sorteio dos 3 pontos da narrativa + dijkstra, feito no navegador -
+    // roda aqui (em vez de em grafo.py) pra cada jogador que abrir a pagina
+    // receber um desafio novo automaticamente, sem precisar rodar python de
+    // novo. dados.js so guarda a cidade fixa (nos/arestas/pesos).
+    //
+    // a narrativa tem 3 pontos, nao 2: a lila sai de casa (partida), precisa
+    // achar a lea (intermediario) e so depois as duas vao juntas ate o
+    // destino sorteado (chegada). por isso rodamos o dijkstra duas vezes,
+    // um por trecho.
+
+    function construirListaAdjacencia(arestas) {
+      const adjacencia = {};
+      for (const no of NOS) adjacencia[no.id] = [];
+      for (const aresta of arestas) {
+        adjacencia[aresta.source].push([aresta.target, aresta.peso]);
+        adjacencia[aresta.target].push([aresta.source, aresta.peso]);
+      }
+      return adjacencia;
+    }
+
+    function distanciaEmArestas(adjacencia, origem) {
+      // bfs sem peso: numero minimo de ruas ate cada no, so pra medir o
+      // quao "longe" dois pontos estao (o dijkstra depois considera os pesos)
+      const distancias = { [origem]: 0 };
+      const fila = [origem];
+      while (fila.length) {
+        const atual = fila.shift();
+        for (const [vizinho] of adjacencia[atual]) {
+          if (!(vizinho in distancias)) {
+            distancias[vizinho] = distancias[atual] + 1;
+            fila.push(vizinho);
+          }
+        }
+      }
+      return distancias;
+    }
+
+    // mesmo valor usado em grafo.py, pra manter a mesma regra do jogo
+    const DISTANCIA_MINIMA_ARESTAS = 6;
+
+    // sorteia partida (lila), intermediario (lea) e chegada (destino), 3 nos
+    // distintos, exigindo DISTANCIA_MINIMA_ARESTAS entre cada par consecutivo
+    // (lila-lea e lea-destino) -- nao exige nada entre lila e destino direto.
+    // tambem exige que os 3 fiquem em quadras diferentes: senao a imagem de
+    // uma casa/destino sobrescreveria a outra na mesma quadra.
+    function sortearTresPontos(adjacencia) {
+      const ids = NOS.map(no => no.id);
+      while (true) {
+        const partida = ids[Math.floor(Math.random() * ids.length)];
+        const intermediario = ids[Math.floor(Math.random() * ids.length)];
+        if (intermediario === partida) continue;
+        if (indiceDaQuadraDoNo(intermediario) === indiceDaQuadraDoNo(partida)) continue;
+
+        const distDaPartida = distanciaEmArestas(adjacencia, partida);
+        if (distDaPartida[intermediario] < DISTANCIA_MINIMA_ARESTAS) continue;
+
+        const distDoIntermediario = distanciaEmArestas(adjacencia, intermediario);
+        const indiceQuadraPartida = indiceDaQuadraDoNo(partida);
+        const indiceQuadraIntermediario = indiceDaQuadraDoNo(intermediario);
+        const candidatosChegada = ids.filter(id =>
+          id !== partida &&
+          id !== intermediario &&
+          distDoIntermediario[id] >= DISTANCIA_MINIMA_ARESTAS &&
+          indiceDaQuadraDoNo(id) !== indiceQuadraPartida &&
+          indiceDaQuadraDoNo(id) !== indiceQuadraIntermediario
+        );
+        if (candidatosChegada.length === 0) continue;
+
+        const chegada = candidatosChegada[Math.floor(Math.random() * candidatosChegada.length)];
+        return [partida, intermediario, chegada];
+      }
+    }
+
+    function dijkstra(adjacencia, origem, destino) {
+      const distancias = {};
+      for (const id in adjacencia) distancias[id] = Infinity;
+      distancias[origem] = 0;
+      const anterior = {};
+      const visitados = new Set();
+
+      // fila de prioridade simples (grade pequena, nao precisa de heap)
+      const fila = [[0, origem]];
+      while (fila.length) {
+        fila.sort((a, b) => a[0] - b[0]);
+        const [custoAtual, atual] = fila.shift();
+
+        if (visitados.has(atual)) continue;
+        visitados.add(atual);
+        if (atual === destino) break;
+
+        for (const [vizinho, peso] of adjacencia[atual]) {
+          const novoCusto = custoAtual + peso;
+          if (novoCusto < distancias[vizinho]) {
+            distancias[vizinho] = novoCusto;
+            anterior[vizinho] = atual;
+            fila.push([novoCusto, vizinho]);
+          }
         }
       }
 
+      const caminho = [destino];
+      while (caminho[caminho.length - 1] !== origem) {
+        caminho.push(anterior[caminho[caminho.length - 1]]);
+      }
+      caminho.reverse();
 
-      conteudoSvg += "<line x1='" + noOrigem.x + "' y1='" + noOrigem.y +
-        "' x2='" + noDestino.x + "' y2='" + noDestino.y +
-        "' stroke='gray' stroke-width='3' />";
-
-      var meioX = (noOrigem.x + noDestino.x) / 2;
-      var meioY = (noOrigem.y + noDestino.y) / 2;
-      conteudoSvg += "<text x='" + meioX + "' y='" + meioY +
-        "' fill='black' font-size='14'>" + aresta.peso + "</text>";
+      return [caminho, distancias[destino]];
     }
 
-    for (var i = 0; i < dadosDoGrafo.nos.length; i++) {
-      var no = dadosDoGrafo.nos[i];
+    const adjacencia = construirListaAdjacencia(dadosDoGrafo.arestas);
+    const [partida, intermediario, chegada] = sortearTresPontos(adjacencia);
 
-      conteudoSvg += "<circle cx='" + no.x + "' cy='" + no.y +
-        "' r='20' fill='blue' />";
+    // --- no extra "chegada na casa da lea" -------------------------------
+    // em vez de marcar a chegada no proprio no da esquina (intermediario),
+    // cria um no novo bem no meio da rua que fica em frente a casa dela (o
+    // lado de baixo do quarteirao, que e onde a calcada/entrada das imagens
+    // de casa sempre desemboca). esse no fica ENTRE os dois nos normais
+    // daquele lado -- a rua direta entre eles deixa de existir, virando duas
+    // metades ate o no novo, e essas duas metades sao sempre "normal" (sem
+    // obstaculo), garantindo que da pra chegar na porta da lea sem obstaculo
+    // nesse ultimo pedacinho.
+    const indiceQuadraLea = indiceDaQuadraDoNo(intermediario);
+    const quadraDaLea = QUADRAS[indiceQuadraLea];
+    const noEsquerdoLea = quadraDaLea[3]; // canto inferior-esquerdo do quarteirao
+    const noDireitoLea = quadraDaLea[2]; // canto inferior-direito do quarteirao
+    const pontoEsquerdoLea = porId[noEsquerdoLea];
+    const pontoDireitoLea = porId[noDireitoLea];
 
-      conteudoSvg += "<text x='" + no.x + "' y='" + no.y +
-        "' fill='white' text-anchor='middle' dominant-baseline='middle'>" +
-        no.id + "</text>";
+    const NO_CHEGADA_LEA = "chegada-lea";
+    const noChegadaLea = {
+      id: NO_CHEGADA_LEA,
+      x: (pontoEsquerdoLea.x + pontoDireitoLea.x) / 2,
+      y: pontoEsquerdoLea.y,
+    };
+    NOS.push(noChegadaLea);
+    porId[NO_CHEGADA_LEA] = noChegadaLea;
+
+    adjacencia[noEsquerdoLea] = adjacencia[noEsquerdoLea].filter(([vizinho]) => vizinho !== noDireitoLea);
+    adjacencia[noDireitoLea] = adjacencia[noDireitoLea].filter(([vizinho]) => vizinho !== noEsquerdoLea);
+    adjacencia[NO_CHEGADA_LEA] = [[noEsquerdoLea, 1], [noDireitoLea, 1]];
+    adjacencia[noEsquerdoLea].push([NO_CHEGADA_LEA, 1]);
+    adjacencia[noDireitoLea].push([NO_CHEGADA_LEA, 1]);
+
+    // --- no extra "chegada final", igualzinho ao de cima so que pro destino
+    // sorteado (banco/parque/predio/quadra) em vez da casa da lea
+    const indiceQuadraDestino = indiceDaQuadraDoNo(chegada);
+    const quadraDoDestino = QUADRAS[indiceQuadraDestino];
+    const noEsquerdoDestino = quadraDoDestino[3]; // canto inferior-esquerdo do quarteirao
+    const noDireitoDestino = quadraDoDestino[2]; // canto inferior-direito do quarteirao
+    const pontoEsquerdoDestino = porId[noEsquerdoDestino];
+    const pontoDireitoDestino = porId[noDireitoDestino];
+
+    const NO_CHEGADA_FINAL = "chegada-final";
+    const noChegadaFinal = {
+      id: NO_CHEGADA_FINAL,
+      x: (pontoEsquerdoDestino.x + pontoDireitoDestino.x) / 2,
+      y: pontoEsquerdoDestino.y,
+    };
+    NOS.push(noChegadaFinal);
+    porId[NO_CHEGADA_FINAL] = noChegadaFinal;
+
+    adjacencia[noEsquerdoDestino] = adjacencia[noEsquerdoDestino].filter(([vizinho]) => vizinho !== noDireitoDestino);
+    adjacencia[noDireitoDestino] = adjacencia[noDireitoDestino].filter(([vizinho]) => vizinho !== noEsquerdoDestino);
+    adjacencia[NO_CHEGADA_FINAL] = [[noEsquerdoDestino, 1], [noDireitoDestino, 1]];
+    adjacencia[noEsquerdoDestino].push([NO_CHEGADA_FINAL, 1]);
+    adjacencia[noDireitoDestino].push([NO_CHEGADA_FINAL, 1]);
+
+    // trecho 1: lila sai de casa e vai ate a porta da casa da lea
+    const [caminhoLilaLea, custoLilaLea] = dijkstra(adjacencia, partida, NO_CHEGADA_LEA);
+    // trecho 2: as duas juntas, da porta da lea ate a porta do destino sorteado
+    const [caminhoLeaDestino, custoLeaDestino] = dijkstra(adjacencia, NO_CHEGADA_LEA, NO_CHEGADA_FINAL);
+    const custoTotal = custoLilaLea + custoLeaDestino;
+
+    // --- destino final: sorteado entre os 4 lugares que tem imagem propria.
+    // o lugar sorteado fica EXCLUSIVO do quarteirao de chegada (nao pode
+    // repetir em nenhum outro quarteirao do mapa nessa partida) -- os outros
+    // 3 continuam disponiveis pro sorteio dos quarteiroes genericos.
+    const LUGARES_DESTINO = [
+      { arquivo: "imagens/canteiros/banco.png", nome: "banco", artigo: "o", preposicao: "ao" },
+      { arquivo: "imagens/canteiros/parque.png", nome: "parque", artigo: "o", preposicao: "ao" },
+      { arquivo: "imagens/canteiros/predio.png", nome: "prédio", artigo: "o", preposicao: "ao" },
+      { arquivo: "imagens/canteiros/quadra-parque.png", nome: "quadra de esportes", artigo: "a", preposicao: "à" },
+    ];
+    const destinoSorteado = LUGARES_DESTINO[Math.floor(Math.random() * LUGARES_DESTINO.length)];
+    const CANTEIROS_ALEATORIOS = LUGARES_DESTINO
+      .filter(lugar => lugar !== destinoSorteado)
+      .map(lugar => lugar.arquivo);
+
+    console.log("partida (casa da Lila):", partida);
+    console.log("intermediario (casa da Lea):", intermediario);
+    console.log("chegada (destino sorteado):", chegada, "->", destinoSorteado.nome);
+    console.log("trecho 1 - Lila -> Lea:", caminhoLilaLea, "| custo:", custoLilaLea);
+    console.log("trecho 2 - Lea -> destino:", caminhoLeaDestino, "| custo:", custoLeaDestino);
+    console.log("custo total (soma dos dois trechos):", custoTotal);
+
+    const indiceQuadraLila = indiceDaQuadraDoNo(partida);
+
+    // casa da lila e da lea e o destino sorteado tem posicao fixa (na
+    // quadra perto do respectivo no); os demais quarteiroes sorteiam entre
+    // os 3 lugares que sobraram (o destino nao entra nesse sorteio generico)
+    const imagensDasQuadras = QUADRAS.map((_ids, indice) => {
+      if (indice === indiceQuadraLila) return "imagens/canteiros/casa-lila.png";
+      if (indice === indiceQuadraLea) return "imagens/canteiros/casa-lea.png";
+      if (indice === indiceQuadraDestino) return destinoSorteado.arquivo;
+      return CANTEIROS_ALEATORIOS[Math.floor(Math.random() * CANTEIROS_ALEATORIOS.length)];
+    });
+
+    // 1) preenche as quadras (o fundo, atras de tudo)
+    QUADRAS.forEach((ids, indice) => {
+      desenhaQuadra(ids, imagensDasQuadras[indice]);
+    });
+
+    // 2) embaixo de cada no, um "quadrado" com cantos arredondados.
+    // as ruas que saem do no sao retangulos retos desenhados por cima, entao
+    // cobrem (deixam reto) o lado onde tem rua; so sobra curva nas pontas de
+    // fora, onde a rua nao continua.
+    const RAIO_CURVA = 16;
+    for (const no of NOS) {
+      el("rect", {
+        x: no.x - LARGURA_RUA / 2, y: no.y - LARGURA_RUA / 2,
+        width: LARGURA_RUA, height: LARGURA_RUA,
+        rx: RAIO_CURVA, ry: RAIO_CURVA,
+        fill: COR_ASFALTO,
+      });
     }
 
-    document.getElementById("grafo").innerHTML = conteudoSvg;
+    // 3) desenha todas as ruas por cima (ficam atras dos nos). as ruas que
+    // viraram "chegada da lea" e "chegada final" sao puladas aqui (ja nao
+    // existem mais como aresta unica) e desenhadas em seguida, forcadas
+    // como "normal" (sem obstaculo).
+    for (const aresta of dadosDoGrafo.arestas) {
+      const ehRuaDaChegadaLea =
+        (aresta.source === noEsquerdoLea && aresta.target === noDireitoLea) ||
+        (aresta.source === noDireitoLea && aresta.target === noEsquerdoLea);
+      const ehRuaDaChegadaFinal =
+        (aresta.source === noEsquerdoDestino && aresta.target === noDireitoDestino) ||
+        (aresta.source === noDireitoDestino && aresta.target === noEsquerdoDestino);
+      if (ehRuaDaChegadaLea || ehRuaDaChegadaFinal) continue;
+      desenhaRua(porId[aresta.source], porId[aresta.target], aresta.label);
+    }
+    desenhaRua(pontoEsquerdoLea, pontoDireitoLea, "normal");
+    desenhaRua(pontoEsquerdoDestino, pontoDireitoDestino, "normal");
+
+    // os 2 nos especiais usam uma imagem propria no lugar do circulo padrao
+    const ICONES_NO = {
+      [NO_CHEGADA_LEA]: "imagens/no-lea.png",
+      [NO_CHEGADA_FINAL]: "imagens/no-chegada.png",
+    };
+    const TAMANHO_ICONE_NO = 40;
+
+    // 4) desenha os nos (esquinas) por cima, cada um clicavel (a logica de
+    // clique -- onCliqueNo -- e definida mais abaixo, junto do resto do jogo)
+    for (const no of NOS) {
+      const icone = ICONES_NO[no.id];
+      if (icone) {
+        const imagemDoNo = el("image", {
+          href: icone,
+          x: no.x - TAMANHO_ICONE_NO / 2, y: no.y - TAMANHO_ICONE_NO / 2,
+          width: TAMANHO_ICONE_NO, height: TAMANHO_ICONE_NO,
+          style: "cursor: pointer;",
+        });
+        imagemDoNo.addEventListener("click", () => onCliqueNo(no.id));
+        continue;
+      }
+      const circulo = el("circle", { cx: no.x, cy: no.y, r: 10, class: "no" });
+      circulo.addEventListener("click", () => onCliqueNo(no.id));
+    }
+
+    // 5) destaca os dois trechos do dijkstra, por cima da rua, com uma cor
+    // diferente pra cada um (pra dar pra distinguir lila->lea de lea->destino).
+    // fica dentro de um grupo escondido por padrao -- so aparece quando o
+    // jogador clica no botao "mostrar resposta" (senao entregaria o
+    // caminho minimo de graca, sem o jogador precisar pensar)
+    const grupoResposta = el("g", { id: "grupo-resposta", style: "display: none;" });
+    function destacaCaminho(caminho, cor) {
+      for (let i = 0; i < caminho.length - 1; i++) {
+        const a = porId[caminho[i]];
+        const b = porId[caminho[i + 1]];
+        el("line", {
+          x1: a.x, y1: a.y, x2: b.x, y2: b.y,
+          stroke: cor, "stroke-width": 6,
+          "stroke-linecap": "round", opacity: 0.85,
+        }, grupoResposta);
+      }
+    }
+    destacaCaminho(caminhoLilaLea, "#ffd400"); // amarelo: trecho 1 (lila -> lea)
+    destacaCaminho(caminhoLeaDestino, "#ff7f11"); // laranja: trecho 2 (lea -> destino)
+
+    // botao "mostrar resposta": alterna a visibilidade do grupo acima
+    const botaoResposta = document.getElementById("botao-resposta");
+    if (botaoResposta) {
+      botaoResposta.addEventListener("click", () => {
+        const estaEscondido = grupoResposta.style.display === "none";
+        grupoResposta.style.display = estaEscondido ? "" : "none";
+        botaoResposta.textContent = estaEscondido ? "Esconder resposta" : "Mostrar resposta";
+      });
+    }
+
+    // 6) destaca os 3 nos especiais da narrativa por cima de tudo. o destino
+    // ja tem a imagem do lugar sorteado no quarteirao (acima), aqui e so o
+    // contorno colorido pra reforcar visualmente qual no e cada um.
+    function destacaNo(id, cor) {
+      const no = porId[id];
+      el("circle", { cx: no.x, cy: no.y, r: 23, fill: "none", stroke: cor, "stroke-width": 5 });
+    }
+    destacaNo(partida, "#2ecc71"); // verde: partida (casa da Lila)
+    destacaNo(NO_CHEGADA_LEA, "#3498db"); // azul: chegada na casa da Lea (o no novo, na rua em frente)
+    destacaNo(NO_CHEGADA_FINAL, "#e74c3c"); // vermelho: chegada (o no novo, na rua em frente ao destino)
+
+    // 7) borda rosa por cima de tudo, colada na borda de verdade do
+    // mapa (a rua mais externa), e nao no tamanho do svg -- o svg tem uma
+    // margem em volta do mapa, entao usar o svg inteiro deixaria a borda
+    // longe da rua. cantos arredondados com o mesmo raio (RAIO_CURVA) dos
+    // quarteiroes dos nos de canto, pra acompanhar a curva deles em vez de
+    // fazer uma quina reta por cima
+    const COR_BORDA_MAPA = "#ef1397";
+    let mapaX, mapaY, mapaW, mapaH;
+    {
+      const margemMapa = LARGURA_RUA / 2;
+      const xs = NOS.map(no => no.x), ys = NOS.map(no => no.y);
+      mapaX = Math.min(...xs) - margemMapa;
+      mapaY = Math.min(...ys) - margemMapa;
+      mapaW = Math.max(...xs) - Math.min(...xs) + margemMapa * 2;
+      mapaH = Math.max(...ys) - Math.min(...ys) + margemMapa * 2;
+      el("rect", {
+        x: mapaX, y: mapaY, width: mapaW, height: mapaH,
+        rx: RAIO_CURVA, ry: RAIO_CURVA,
+        fill: "none", stroke: COR_BORDA_MAPA, "stroke-width": 10,
+      });
+    }
+
+    // 8) placa no meio da borda de cima: uma parte "mais alta" so pra
+    // mostrar o titulo do jogo. desenhada por cima da borda (que ja foi
+    // desenhada acima), entao o pedaco da linha atras dela some e parece
+    // uma placa encaixada, crescendo pra fora do topo do mapa
+    {
+      const placaW = 240, placaH = 48;
+      const sobreporNaBorda = 20; // quanto a placa "afunda" no mapa, pra nao ficar flutuando
+      const placaX = mapaX + mapaW / 2 - placaW / 2;
+      const placaY = mapaY + sobreporNaBorda - placaH - 15;
+
+      el("rect", {
+        x: placaX, y: placaY, width: placaW, height: placaH,
+        rx: 15, ry: 15,
+        fill: COR_BORDA_MAPA,
+      });
+
+      const titulo = el("text", {
+        x: mapaX + mapaW / 2, y: placaY + placaH / 2,
+        "text-anchor": "middle", "dominant-baseline": "middle",
+        fill: "#fff", "font-family": "'Fredoka', sans-serif",
+        "font-size": 30, "font-weight": 700,
+      });
+      titulo.textContent = "Polly Pickup";
+    }
+
+    // --- jogabilidade: mover o carrinho da lila clicando nos nos ----------
+    // o jogador so pode clicar num no vizinho (ligado por uma aresta) ao no
+    // onde o carrinho esta agora. cada clique valido acumula custo (peso da
+    // aresta percorrida) e registra o no no caminho do jogador.
+
+    const ESTADO_JOGO = {
+      noAtual: partida,
+      caminho: [partida],
+      custo: 0,
+      // "ate-lea" -> "ate-destino" -> "concluido"
+      fase: "ate-lea",
+    };
+
+    // acha o peso da aresta entre a e b, ou null se eles nao forem vizinhos
+    function pesoDaAresta(a, b) {
+      const encontrado = adjacencia[a].find(([vizinho]) => vizinho === b);
+      return encontrado ? encontrado[1] : null;
+    }
+
+    function atualizarMensagem(html) {
+      const caixa = document.getElementById("mensagem");
+      if (caixa) caixa.innerHTML = html;
+      console.log(html);
+    }
+
+    // desenha o carrinho da lila em cima do no de partida (a casa dela)
+    const LARGURA_CARRO = 40;
+    const ALTURA_CARRO = 28;
+    const imagemCarroLila = el("image", {
+      href: "imagens/carro-polly.png",
+      x: porId[partida].x - LARGURA_CARRO / 2,
+      y: porId[partida].y - ALTURA_CARRO / 2,
+      width: LARGURA_CARRO,
+      height: ALTURA_CARRO,
+    });
+
+    // carro da lea: mesma imagem do carro-polly, so que roxo (via filtro css
+    // de hue-rotate, sem precisar de uma imagem nova) -- comeca escondido e
+    // so aparece quando a lila encontra a lea (fase "ate-destino")
+    const imagemCarroLea = el("image", {
+      href: "imagens/carro-polly.png",
+      x: porId[partida].x - LARGURA_CARRO / 2,
+      y: porId[partida].y - ALTURA_CARRO / 2,
+      width: LARGURA_CARRO,
+      height: ALTURA_CARRO,
+      style: "filter: hue-rotate(-60deg);",
+      visibility: "hidden",
+    });
+
+    function moverCarroLilaPara(id) {
+      const no = porId[id];
+      imagemCarroLila.setAttribute("x", no.x - LARGURA_CARRO / 2);
+      imagemCarroLila.setAttribute("y", no.y - ALTURA_CARRO / 2);
+    }
+
+    function moverCarroLeaPara(id) {
+      const no = porId[id];
+      imagemCarroLea.setAttribute("x", no.x - LARGURA_CARRO / 2);
+      imagemCarroLea.setAttribute("y", no.y - ALTURA_CARRO / 2);
+    }
+
+    function exibirCarroLea(id) {
+      moverCarroLeaPara(id);
+      imagemCarroLea.setAttribute("visibility", "visible");
+    }
+
+    // chamada pelo clique num no (ou diretamente, em testes/console)
+    function onCliqueNo(id) {
+      if (ESTADO_JOGO.fase === "concluido") {
+        atualizarMensagem("O jogo ja acabou! Recarregue a pagina pra jogar de novo.");
+        return;
+      }
+
+      const noAntes = ESTADO_JOGO.noAtual;
+      const peso = pesoDaAresta(noAntes, id);
+      if (peso === null) {
+        // clique invalido: no nao e vizinho do no atual do carrinho.
+        // nao pode "pular" direto pra qualquer no do mapa.
+        atualizarMensagem(
+          `Movimento invalido: o no ${id} nao e vizinho do no atual (${noAntes}).`
+        );
+        return;
+      }
+
+      // move o carrinho da lila: registra o no no caminho e soma o custo da
+      // rua percorrida. voltar pra um no ja visitado e permitido -- so custa mais.
+      ESTADO_JOGO.custo += peso;
+      ESTADO_JOGO.caminho.push(id);
+      ESTADO_JOGO.noAtual = id;
+      moverCarroLilaPara(id);
+
+      if (ESTADO_JOGO.fase === "ate-lea" && id === NO_CHEGADA_LEA) {
+        ESTADO_JOGO.fase = "ate-destino";
+        exibirCarroLea(NO_CHEGADA_LEA);
+        atualizarMensagem(
+          `Lila encontrou a Lea! Agora e so chegar juntas ${destinoSorteado.preposicao} ${destinoSorteado.nome} ` +
+          `<img src="${ICONES_NO[NO_CHEGADA_FINAL]}" class="icone-inline" alt="chegada">.`
+        );
+        return;
+      }
+
+      // o carro da lea segue sempre um passo atras: quando a lila se move
+      // pro no "id", a lea vai pro no que a lila acabou de deixar (noAntes)
+      if (ESTADO_JOGO.fase === "ate-destino") {
+        moverCarroLeaPara(noAntes);
+      }
+
+      if (ESTADO_JOGO.fase === "ate-destino" && id === NO_CHEGADA_FINAL) {
+        ESTADO_JOGO.fase = "concluido";
+        const diferenca = ESTADO_JOGO.custo - custoTotal;
+        const comparacao = diferenca <= 0
+          ? "Voce encontrou o caminho mais rapido!"
+          : `Voce ficou ${diferenca} acima do caminho mais rapido (dijkstra).`;
+
+        atualizarMensagem(
+          `Chegaram ${destinoSorteado.preposicao} ${destinoSorteado.nome} <img src="${ICONES_NO[NO_CHEGADA_FINAL]}" class="icone-inline" alt="chegada">! ` +
+          `Caminho percorrido: ${ESTADO_JOGO.caminho.join(" -> ")} ` +
+          `(custo ${ESTADO_JOGO.custo}). Caminho otimo: custo ${custoTotal}. ${comparacao}`
+        );
+        return;
+      }
+
+      atualizarMensagem(`Carrinho em ${id}. Custo acumulado ate agora: ${ESTADO_JOGO.custo}.`);
+    }
+
+    // mensagem inicial no tom de "regras do jogo": os icones sao os mesmos
+    // desenhados nos nos da casa da lea e da chegada (ICONES_NO), entao
+    // fica facil reconhecer o que procurar no mapa
+    atualizarMensagem(
+      `Encontre a Lea <img src="${ICONES_NO[NO_CHEGADA_LEA]}" class="icone-inline" alt="Lea"> usando o menor caminho possível, cuidado com os obstáculos! ` +
+      `Depois, vão juntas ${destinoSorteado.preposicao} ${destinoSorteado.nome} <img src="${ICONES_NO[NO_CHEGADA_FINAL]}" class="icone-inline" alt="chegada">.`
+    );
   </script>
-
 </body>
 </html>
