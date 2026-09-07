@@ -58,7 +58,7 @@ O custo total do desafio é a soma dos dois trechos, e é contra esse valor que 
 > ⚠️ As imagens abaixo ainda são placeholders — falta adicionar os prints de tela reais do jogo rodando.
 
 <p align="center">
-  <img src="imagens/tela-jogo.png" alt="Tela do jogo com o carrinho em movimento pelo mapa" width="70%">
+  <img src="imagens/tela-jogo.png" alt="Tela do jogo com o carrinho em movimento pelo mapa" width="95%">
 </p>
 
 <p align="center">
