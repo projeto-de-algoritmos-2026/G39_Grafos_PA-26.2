@@ -5,12 +5,13 @@
 <title>Grafo da Cidade</title>
 <style>
   body { font-family: sans-serif; background: #f4f4f4; }
-  .no { fill: #ff69b4; stroke: white; stroke-width: 3; }
+  .no { fill: #ff69b4; stroke: white; stroke-width: 3; cursor: pointer; }
   .no-label { font-size: 14px; font-weight: bold; text-anchor: middle; fill: white; }
 </style>
 </head>
 <body>
   <h1>Grafo da cidade</h1>
+  <div id="mensagem" style="font-weight: bold; margin: 8px 0; min-height: 1.2em;"></div>
   <svg></svg>
 
   <!-- dados.js e gerado pelo grafo.py: e a fonte unica dos nos/arestas/layout -->
@@ -325,9 +326,11 @@
       desenhaRua(porId[a], porId[b]);
     }
 
-    // 4) desenha os nos (esquinas) por cima
+    // 4) desenha os nos (esquinas) por cima, cada um clicavel (a logica de
+    // clique -- onCliqueNo -- e definida mais abaixo, junto do resto do jogo)
     for (const no of NOS) {
-      el("circle", { cx: no.x, cy: no.y, r: 18, class: "no" });
+      const circulo = el("circle", { cx: no.x, cy: no.y, r: 18, class: "no" });
+      circulo.addEventListener("click", () => onCliqueNo(no.id));
       const label = el("text", { x: no.x, y: no.y + 5, class: "no-label" });
       label.textContent = no.id;
     }
@@ -358,6 +361,99 @@
     destacaNo(partida, "#2ecc71"); // verde: partida (casa da Lila)
     destacaNo(intermediario, "#3498db"); // azul: intermediario (casa da Lea)
     destacaNo(chegada, "#e74c3c"); // vermelho: chegada (festa)
+
+    // --- jogabilidade: mover o carrinho da lila clicando nos nos ----------
+    // o jogador so pode clicar num no vizinho (ligado por uma aresta) ao no
+    // onde o carrinho esta agora. cada clique valido acumula custo (peso da
+    // aresta percorrida) e registra o no no caminho do jogador.
+
+    const ESTADO_JOGO = {
+      noAtual: partida,
+      caminho: [partida],
+      custo: 0,
+      // "ate-lea" -> "ate-festa" -> "concluido"
+      fase: "ate-lea",
+    };
+
+    // acha o peso da aresta entre a e b, ou null se eles nao forem vizinhos
+    function pesoDaAresta(a, b) {
+      const encontrado = adjacencia[a].find(([vizinho]) => vizinho === b);
+      return encontrado ? encontrado[1] : null;
+    }
+
+    function atualizarMensagem(texto) {
+      const caixa = document.getElementById("mensagem");
+      if (caixa) caixa.textContent = texto;
+      console.log(texto);
+    }
+
+    // desenha o carrinho em cima do no de partida (a casa da lila)
+    const LARGURA_CARRO = 40;
+    const ALTURA_CARRO = 28;
+    const imagemCarro = el("image", {
+      href: "imagens/carro-polly.png",
+      x: porId[partida].x - LARGURA_CARRO / 2,
+      y: porId[partida].y - ALTURA_CARRO / 2,
+      width: LARGURA_CARRO,
+      height: ALTURA_CARRO,
+    });
+
+    function moverCarroPara(id) {
+      const no = porId[id];
+      imagemCarro.setAttribute("x", no.x - LARGURA_CARRO / 2);
+      imagemCarro.setAttribute("y", no.y - ALTURA_CARRO / 2);
+    }
+
+    // chamada pelo clique num no (ou diretamente, em testes/console)
+    function onCliqueNo(id) {
+      if (ESTADO_JOGO.fase === "concluido") {
+        atualizarMensagem("O jogo ja acabou! Recarregue a pagina pra jogar de novo.");
+        return;
+      }
+
+      const peso = pesoDaAresta(ESTADO_JOGO.noAtual, id);
+      if (peso === null) {
+        // clique invalido: no nao e vizinho do no atual do carrinho.
+        // nao pode "pular" direto pra qualquer no do mapa.
+        atualizarMensagem(
+          `Movimento invalido: o no ${id} nao e vizinho do no atual (${ESTADO_JOGO.noAtual}).`
+        );
+        return;
+      }
+
+      // move o carrinho: registra o no no caminho e soma o custo da rua
+      // percorrida. voltar pra um no ja visitado e permitido -- so custa mais.
+      ESTADO_JOGO.custo += peso;
+      ESTADO_JOGO.caminho.push(id);
+      ESTADO_JOGO.noAtual = id;
+      moverCarroPara(id);
+
+      if (ESTADO_JOGO.fase === "ate-lea" && id === intermediario) {
+        ESTADO_JOGO.fase = "ate-festa";
+        atualizarMensagem("Lila encontrou a Lea! Agora e so chegar juntas na festa.");
+        return;
+      }
+
+      if (ESTADO_JOGO.fase === "ate-festa" && id === chegada) {
+        ESTADO_JOGO.fase = "concluido";
+        const diferenca = ESTADO_JOGO.custo - custoTotal;
+        const comparacao = diferenca <= 0
+          ? "Voce encontrou o caminho mais rapido!"
+          : `Voce ficou ${diferenca} acima do caminho mais rapido (dijkstra).`;
+
+        atualizarMensagem(
+          `Chegaram na festa! Caminho percorrido: ${ESTADO_JOGO.caminho.join(" -> ")} ` +
+          `(custo ${ESTADO_JOGO.custo}). Caminho otimo: custo ${custoTotal}. ${comparacao}`
+        );
+        return;
+      }
+
+      atualizarMensagem(`Carrinho em ${id}. Custo acumulado ate agora: ${ESTADO_JOGO.custo}.`);
+    }
+
+    atualizarMensagem(
+      `Lila comeca em ${partida}. Encontre a Lea (${intermediario}) e depois va ate a festa.`
+    );
   </script>
 </body>
 </html>
