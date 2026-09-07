@@ -5,16 +5,96 @@
 <title>Grafo da Cidade</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  body { font-family: sans-serif; background: #f4f4f4; }
+  body {
+    font-family: sans-serif;
+    background: #f4f4f4 url("imagens/fundo.png") center center / cover no-repeat fixed;
+  }
   .no { fill: rgba(255, 255, 255, 0.5); stroke: none; cursor: pointer; }
-  svg { display: block; }
+  svg { display: block; margin: 0 auto; }
+
+  /* painel de regras: mesma fonte divertida da placa "Polly Pickup" do
+     mapa, texto centralizado e branco, num cartao escuro pra continuar
+     legivel por cima da imagem de fundo */
+  .painel-regras {
+    max-width: 760px;
+    margin: 20px auto;
+    padding: 18px 28px;
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 20px;
+    color: #fff;
+    font-family: 'Fredoka', sans-serif;
+    text-align: center;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+  }
+
+  #mensagem {
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .icone-inline {
+    height: 1.3em;
+    vertical-align: middle;
+    margin: 0 2px;
+  }
+
+  .legenda-obstaculos {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 2px dashed rgba(255, 255, 255, 0.35);
+  }
+
+  .legenda-titulo {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+
+  .lista-obstaculos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 18px;
+  }
+
+  .item-obstaculo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 90px;
+  }
+
+  .item-obstaculo img {
+    width: 46px;
+    height: 46px;
+    object-fit: contain;
+  }
+
+  .item-obstaculo .nome-obstaculo {
+    font-size: 13px;
+    font-weight: 400;
+    text-transform: capitalize;
+  }
+
+  .item-obstaculo .pontos-obstaculo {
+    font-size: 14px;
+    font-weight: 700;
+  }
 </style>
 </head>
 <body>
-  <h1>Grafo da cidade</h1>
-  <div id="mensagem" style="font-weight: bold; margin: 8px 0; min-height: 1.2em;"></div>
+  <div class="painel-regras">
+    <div id="mensagem"></div>
+    <div class="legenda-obstaculos">
+      <div class="legenda-titulo">Cada obstáculo custa pontos diferentes:</div>
+      <div id="lista-obstaculos" class="lista-obstaculos"></div>
+    </div>
+  </div>
   <svg></svg>
 
   <!-- dados.js e gerado pelo grafo.py: e a fonte unica dos nos/arestas/layout -->
@@ -56,6 +136,29 @@
       lama: "imagens/obstaculos/obs-lama.png",
     };
     const TAMANHO_OBSTACULO = LARGURA_RUA * 0.9; // cabe dentro da largura da rua
+
+    // pontos perdidos por obstaculo, pra mostrar na legenda de regras --
+    // precisam ser os mesmos valores do dicionario OBSTACULOS em grafo.py
+    const PONTOS_OBSTACULO = {
+      tornado: 7,
+      "óleo": 5,
+      pregos: 3,
+      lama: 8,
+    };
+
+    // preenche a legenda de regras (foto do obstaculo + quantos pontos ele
+    // custa), uma pra cada tipo listado em IMAGENS_OBSTACULO
+    const listaObstaculosEl = document.getElementById("lista-obstaculos");
+    if (listaObstaculosEl) {
+      listaObstaculosEl.innerHTML = Object.keys(IMAGENS_OBSTACULO).map(label => {
+        const nome = label.charAt(0).toUpperCase() + label.slice(1);
+        return `<div class="item-obstaculo">
+          <img src="${IMAGENS_OBSTACULO[label]}" alt="${nome}">
+          <span class="nome-obstaculo">${nome}</span>
+          <span class="pontos-obstaculo">-${PONTOS_OBSTACULO[label]} pontos</span>
+        </div>`;
+      }).join("");
+    }
 
     const svg = document.querySelector("svg");
     const ns = "http://www.w3.org/2000/svg";
@@ -553,10 +656,10 @@
       return encontrado ? encontrado[1] : null;
     }
 
-    function atualizarMensagem(texto) {
+    function atualizarMensagem(html) {
       const caixa = document.getElementById("mensagem");
-      if (caixa) caixa.textContent = texto;
-      console.log(texto);
+      if (caixa) caixa.innerHTML = html;
+      console.log(html);
     }
 
     // desenha o carrinho da lila em cima do no de partida (a casa dela)
@@ -629,7 +732,8 @@
         ESTADO_JOGO.fase = "ate-destino";
         exibirCarroLea(NO_CHEGADA_LEA);
         atualizarMensagem(
-          `Lila encontrou a Lea! Agora e so chegar juntas ${destinoSorteado.preposicao} ${destinoSorteado.nome}.`
+          `Lila encontrou a Lea! Agora e so chegar juntas ${destinoSorteado.preposicao} ${destinoSorteado.nome} ` +
+          `<img src="${ICONES_NO[NO_CHEGADA_FINAL]}" class="icone-inline" alt="chegada">.`
         );
         return;
       }
@@ -648,7 +752,8 @@
           : `Voce ficou ${diferenca} acima do caminho mais rapido (dijkstra).`;
 
         atualizarMensagem(
-          `Chegaram ${destinoSorteado.preposicao} ${destinoSorteado.nome}! Caminho percorrido: ${ESTADO_JOGO.caminho.join(" -> ")} ` +
+          `Chegaram ${destinoSorteado.preposicao} ${destinoSorteado.nome} <img src="${ICONES_NO[NO_CHEGADA_FINAL]}" class="icone-inline" alt="chegada">! ` +
+          `Caminho percorrido: ${ESTADO_JOGO.caminho.join(" -> ")} ` +
           `(custo ${ESTADO_JOGO.custo}). Caminho otimo: custo ${custoTotal}. ${comparacao}`
         );
         return;
@@ -657,8 +762,12 @@
       atualizarMensagem(`Carrinho em ${id}. Custo acumulado ate agora: ${ESTADO_JOGO.custo}.`);
     }
 
+    // mensagem inicial no tom de "regras do jogo": os icones sao os mesmos
+    // desenhados nos nos da casa da lea e da chegada (ICONES_NO), entao
+    // fica facil reconhecer o que procurar no mapa
     atualizarMensagem(
-      `Lila comeca em ${partida}. Encontre a Lea (na porta da casa dela, no ${NO_CHEGADA_LEA}) e depois vao juntas ate ${destinoSorteado.artigo} ${destinoSorteado.nome}.`
+      `Encontre a Lea <img src="${ICONES_NO[NO_CHEGADA_LEA]}" class="icone-inline" alt="Lea"> usando o menor caminho possível, cuidado com os obstáculos! ` +
+      `Depois, vão juntas ${destinoSorteado.preposicao} ${destinoSorteado.nome} <img src="${ICONES_NO[NO_CHEGADA_FINAL]}" class="icone-inline" alt="chegada">.`
     );
   </script>
 </body>
