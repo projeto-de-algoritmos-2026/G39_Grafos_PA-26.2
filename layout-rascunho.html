@@ -28,7 +28,6 @@
     const idNo = (r, c) => r * COLUNAS + c + 1;
 
     const NOS = dadosDoGrafo.nos;
-    const RUAS = dadosDoGrafo.arestas.map(a => [a.source, a.target]);
 
     document.querySelector("svg").setAttribute("width", dadosDoGrafo.layout.width);
     document.querySelector("svg").setAttribute("height", dadosDoGrafo.layout.height);
@@ -45,6 +44,15 @@
     const DIST_FAIXA_PEDESTRE = 48; // distancia da faixa de pedestre ate o no
     const COMPRIMENTO_FAIXA_PEDESTRE = 10; // distancia entre as duas linhas da faixa
     const FOLGA_LINHA_CENTRAL = 6; // espacinho pra faixa central nao encostar na faixa de pedestre
+
+    // imagem de cada tipo de obstaculo (mesmos labels usados em grafo.py/dados.js)
+    const IMAGENS_OBSTACULO = {
+      tornado: "imagens/obstaculos/obs-furacao.png",
+      "óleo": "imagens/obstaculos/obs-oleo.png",
+      pregos: "imagens/obstaculos/obs-prego.png",
+      lama: "imagens/obstaculos/obs-lama.png",
+    };
+    const TAMANHO_OBSTACULO = LARGURA_RUA * 0.9; // cabe dentro da largura da rua
 
     const svg = document.querySelector("svg");
     const ns = "http://www.w3.org/2000/svg";
@@ -125,8 +133,9 @@
       }
     }
 
-    // desenha uma rua (aresta) entre dois nos
-    function desenhaRua(a, b) {
+    // desenha uma rua (aresta) entre dois nos. "label" e o tipo da rua vindo
+    // do dados.js ("normal" ou o nome de um obstaculo)
+    function desenhaRua(a, b, label) {
       const horizontal = a.y === b.y;
       const [de, para] = horizontal
         ? (a.x < b.x ? [a, b] : [b, a])
@@ -165,6 +174,18 @@
       } else {
         faixaDePedestre(de.x, de.y + DIST_FAIXA_PEDESTRE, false);
         faixaDePedestre(para.x, para.y - DIST_FAIXA_PEDESTRE, false);
+      }
+
+      // se a rua tiver obstaculo, desenha o icone dele bem no meio da rua
+      const imagemObstaculo = IMAGENS_OBSTACULO[label];
+      if (imagemObstaculo) {
+        el("image", {
+          href: imagemObstaculo,
+          x: (de.x + para.x) / 2 - TAMANHO_OBSTACULO / 2,
+          y: (de.y + para.y) / 2 - TAMANHO_OBSTACULO / 2,
+          width: TAMANHO_OBSTACULO,
+          height: TAMANHO_OBSTACULO,
+        });
       }
     }
 
@@ -342,8 +363,8 @@
     }
 
     // 3) desenha todas as ruas por cima (ficam atras dos nos)
-    for (const [a, b] of RUAS) {
-      desenhaRua(porId[a], porId[b]);
+    for (const aresta of dadosDoGrafo.arestas) {
+      desenhaRua(porId[aresta.source], porId[aresta.target], aresta.label);
     }
 
     // 4) desenha os nos (esquinas) por cima, cada um clicavel (a logica de
