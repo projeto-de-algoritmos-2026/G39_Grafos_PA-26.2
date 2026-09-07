@@ -43,10 +43,21 @@ ajustei ruas, mudei o terreno para se adpatr melhor no computador
 
 ### grafo: geração programática
 **autor:** Cibelly
-Grafo agora é gerado por parâmetros (colunas, linhas) em vez de listas fixas. Grade 
+1. Grafo agora é gerado por parâmetros (colunas, linhas) em vez de listas fixas. Grade 
 mantida em 32 nós.
 
 ### layout: unificação com o grafo
 **autor:** Cibelly
-Layout deixou de ter grade própria e passou a ler direto do dados.js, mesmo arquivo 
+1. Layout deixou de ter grade própria e passou a ler direto do dados.js, mesmo arquivo 
 gerado pelo grafo. Antes tinha 24 nós no layout e 32 no grafo, agora bate certinho.
+
+### logica: dijkstra e sorteio em javascript
+**autor:** Cibelly
+2. Sorteio de partida/chegada e Dijkstra movidos de Python para JavaScript, rodando toda 
+vez que a página abre. grafo.py agora só gera a cidade fixa (nos, arestas, pesos).
+
+### layout: destaque do caminho minimo
+**autor:** Cibelly
+2. Adicionado destaque visual em layout-rascunho.html: caminho minimo em amarelo, partida 
+em verde, chegada em vermelho. Cada F5 sorteia um desafio novo. 
+comando para ver : xdg-open ~/G39_Grafos_PA-26.2/layout-rascunho.html
