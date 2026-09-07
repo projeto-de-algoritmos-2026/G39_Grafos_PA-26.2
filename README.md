@@ -20,7 +20,7 @@
 
 ---
 
-## 👩‍🎓 Alunos
+## Alunos
 
 | Matrícula | Aluno |
 |:---:|:---|
@@ -29,13 +29,13 @@
 
 ---
 
-## 💌 Sobre
+## Sobre
 
 **Polly Party Pickup** é baseado em um jogo antigo de navegador da franquia Polly Pocket, muito popular nos anos 2000, mas reimaginado como um problema de grafos.
 
-A história: **Lila** sai de casa dirigindo pelas ruas da cidade em busca da sua amiga **Lea**. Assim que as duas se encontram, elas seguem juntas até um destino sorteado entre 4 lugares possíveis: 🏦 banco, 🌳 parque, 🏢 prédio ou 🏀 quadra de esportes. Só que nem toda rua é tranquila — algumas têm obstáculos (🌪️ tornado, 🛢️ óleo, 📌 pregos, 🟤 lama) que tornam o trajeto mais demorado.
+A história: **Lila** sai de casa dirigindo pelas ruas da cidade em busca da sua amiga **Lea**. Assim que as duas se encontram, elas seguem juntas até um destino sorteado entre 4 lugares possíveis: 🏦 banco, parque, prédio ou quadra de esportes. Só que nem toda rua é tranquila — algumas têm obstáculos (tornado, óleo, pregos, lama) que tornam o trajeto mais demorado.
 
-### 🗺️ Como o grafo é modelado
+### Como o grafo é modelado
 
 - **Nós** → esquinas da cidade (uma grade de 32 esquinas, 8 colunas × 4 linhas).
 - **Arestas** → ruas que ligam esquinas vizinhas (o grafo não é direcionado: toda rua pode ser percorrida nos dois sentidos).
@@ -43,7 +43,7 @@ A história: **Lila** sai de casa dirigindo pelas ruas da cidade em busca da sua
 
 O grafo é **cíclico** (é uma malha de quadras, não uma árvore) e sempre totalmente conexo, já que é gerado a partir de uma grade regular.
 
-### 🧭 Por que Dijkstra?
+### Por que Dijkstra?
 
 O problema do jogo é, no fundo, sempre o mesmo: **dado um ponto de partida e um ponto de chegada, qual é o caminho de menor custo entre eles, considerando os obstáculos pelo caminho?** Como todos os pesos são positivos (nenhuma rua "desconta" tempo), o algoritmo de **Dijkstra** é a escolha natural — ele garante o caminho ótimo nesse cenário, com uma complexidade muito mais eficiente do que testar todas as rotas possíveis.
 
@@ -61,9 +61,8 @@ O custo total do desafio é a soma dos dois trechos, e é contra esse valor que 
 > ⚠️ As imagens abaixo ainda são placeholders — falta adicionar os prints de tela reais do jogo rodando.
 
 <p align="center">
-  <img src="/assets/tela-inicio.png" alt="Tela inicial do jogo" width="30%">
-  <img src="/assets/tela-jogo.png" alt="Tela do jogo com o carrinho em movimento pelo mapa" width="30%">
-  <img src="/assets/tela-vitoria.png" alt="Tela de chegada, com o caminho percorrido e a comparação com o Dijkstra" width="30%">
+  <img src="assets/tela-inicio.png" alt="Tela inicial do jogo" width="30%">
+  <img src="assets/tela-jogo.png" alt="Tela do jogo com o carrinho em movimento pelo mapa" width="30%">
 </p>
 
 <p align="center">
@@ -72,9 +71,9 @@ O custo total do desafio é a soma dos dois trechos, e é contra esse valor que 
 
 ---
 
-## 🎬 Vídeo de Apresentação
+## Vídeo de Apresentação
 
-📺 [Assista aqui](https://www.youtube.com/watch?v=SEU_VIDEO_AQUI) _(link a ser atualizado)_
+[Assista aqui](https://www.youtube.com/watch?v=SEU_VIDEO_AQUI) _(link a ser atualizado)_
 
 
 ### Passo a passo
@@ -88,7 +87,7 @@ Depois, basta abrir o arquivo `layout-rascunho.html` direto no navegador (duplo 
 
 ## 🕹️ Uso
 
-1. Abra `layout-rascunho.html` no navegador. O carrinho da Lila 🚗💗 aparece já posicionado na casinha rosa dela.
+1. Abra `layout-rascunho.html` no navegador. O carrinho da Lila 💗 aparece já posicionado na casinha rosa dela.
 2. Clique em um nó **vizinho** ao nó onde o carrinho está agora para mover a Lila até lá. Não dá pra "pular" direto pra qualquer esquina do mapa — só pelas ruas, uma de cada vez.
 3. Cada clique válido soma o custo daquela rua (mais caro se ela tiver um obstáculo) e registra o trajeto percorrido.
 4. Quando a Lila chegar na casinha roxa da Lea 💜, aparece uma mensagem de encontro e o carro roxo da Lea passa a acompanhar, sempre um nó atrás do carrinho da Lila.
