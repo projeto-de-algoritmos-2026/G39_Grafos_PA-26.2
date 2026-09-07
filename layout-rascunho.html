@@ -3,9 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <title>Grafo da Cidade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@700&display=swap" rel="stylesheet">
 <style>
   body { font-family: sans-serif; background: #f4f4f4; }
   .no { fill: rgba(255, 255, 255, 0.5); stroke: none; cursor: pointer; }
+  svg { display: block; }
 </style>
 </head>
 <body>
@@ -482,6 +486,53 @@
     destacaNo(partida, "#2ecc71"); // verde: partida (casa da Lila)
     destacaNo(NO_CHEGADA_LEA, "#3498db"); // azul: chegada na casa da Lea (o no novo, na rua em frente)
     destacaNo(NO_CHEGADA_FINAL, "#e74c3c"); // vermelho: chegada (o no novo, na rua em frente ao destino)
+
+    // 7) borda rosa por cima de tudo, colada na borda de verdade do
+    // mapa (a rua mais externa), e nao no tamanho do svg -- o svg tem uma
+    // margem em volta do mapa, entao usar o svg inteiro deixaria a borda
+    // longe da rua. cantos arredondados com o mesmo raio (RAIO_CURVA) dos
+    // quarteiroes dos nos de canto, pra acompanhar a curva deles em vez de
+    // fazer uma quina reta por cima
+    const COR_BORDA_MAPA = "#ef1397";
+    let mapaX, mapaY, mapaW, mapaH;
+    {
+      const margemMapa = LARGURA_RUA / 2;
+      const xs = NOS.map(no => no.x), ys = NOS.map(no => no.y);
+      mapaX = Math.min(...xs) - margemMapa;
+      mapaY = Math.min(...ys) - margemMapa;
+      mapaW = Math.max(...xs) - Math.min(...xs) + margemMapa * 2;
+      mapaH = Math.max(...ys) - Math.min(...ys) + margemMapa * 2;
+      el("rect", {
+        x: mapaX, y: mapaY, width: mapaW, height: mapaH,
+        rx: RAIO_CURVA, ry: RAIO_CURVA,
+        fill: "none", stroke: COR_BORDA_MAPA, "stroke-width": 10,
+      });
+    }
+
+    // 8) placa no meio da borda de cima: uma parte "mais alta" so pra
+    // mostrar o titulo do jogo. desenhada por cima da borda (que ja foi
+    // desenhada acima), entao o pedaco da linha atras dela some e parece
+    // uma placa encaixada, crescendo pra fora do topo do mapa
+    {
+      const placaW = 240, placaH = 48;
+      const sobreporNaBorda = 20; // quanto a placa "afunda" no mapa, pra nao ficar flutuando
+      const placaX = mapaX + mapaW / 2 - placaW / 2;
+      const placaY = mapaY + sobreporNaBorda - placaH - 15;
+
+      el("rect", {
+        x: placaX, y: placaY, width: placaW, height: placaH,
+        rx: 15, ry: 15,
+        fill: COR_BORDA_MAPA,
+      });
+
+      const titulo = el("text", {
+        x: mapaX + mapaW / 2, y: placaY + placaH / 2,
+        "text-anchor": "middle", "dominant-baseline": "middle",
+        fill: "#fff", "font-family": "'Fredoka', sans-serif",
+        "font-size": 30, "font-weight": 700,
+      });
+      titulo.textContent = "Polly Pickup";
+    }
 
     // --- jogabilidade: mover o carrinho da lila clicando nos nos ----------
     // o jogador so pode clicar num no vizinho (ligado por uma aresta) ao no
