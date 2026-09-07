@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 220" width="100%" height="220">
+  <defs>
+    <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe3f1"/>
+      <stop offset="100%" stop-color="#f3e6ff"/>
+    </linearGradient>
+    <linearGradient id="asfalto" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9b93a8"/>
+      <stop offset="100%" stop-color="#847c92"/>
+    </linearGradient>
+  </defs>
+
+  <!-- fundo -->
+  <rect x="0" y="0" width="900" height="220" rx="24" fill="url(#ceu)"/>
+
+  <!-- nuvenzinhas -->
+  <g fill="#ffffff" opacity="0.7">
+    <ellipse cx="120" cy="45" rx="30" ry="14"/>
+    <ellipse cx="145" cy="38" rx="22" ry="12"/>
+    <ellipse cx="760" cy="55" rx="34" ry="15"/>
+    <ellipse cx="790" cy="46" rx="20" ry="11"/>
+  </g>
+
+  <!-- rua -->
+  <rect x="0" y="150" width="900" height="46" fill="url(#asfalto)"/>
+  <g stroke="#ffffff" stroke-width="4" stroke-dasharray="22 18" opacity="0.85">
+    <line x1="0" y1="173" x2="900" y2="173"/>
+  </g>
+
+  <!-- calcada -->
+  <rect x="0" y="140" width="900" height="10" fill="#d9d2e0"/>
+
+  <!-- casa da lila (rosa), a esquerda -->
+  <g>
+    <rect x="60" y="90" width="90" height="60" fill="#ff8fc7"/>
+    <polygon points="55,90 105,45 155,90" fill="#e75fa8"/>
+    <rect x="90" y="115" width="24" height="35" fill="#ffffff"/>
+    <rect x="72" y="102" width="18" height="18" fill="#fff6fb"/>
+    <rect x="122" y="102" width="18" height="18" fill="#fff6fb"/>
+    <text x="105" y="80" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="bold" fill="#c23e8a">Lila</text>
+  </g>
+
+  <!-- casa da lea (roxa), a direita -->
+  <g>
+    <rect x="750" y="90" width="90" height="60" fill="#b28fe0"/>
+    <polygon points="745,90 795,45 845,90" fill="#7c4fc4"/>
+    <rect x="780" y="115" width="24" height="35" fill="#ffffff"/>
+    <rect x="762" y="102" width="18" height="18" fill="#f6f0ff"/>
+    <rect x="812" y="102" width="18" height="18" fill="#f6f0ff"/>
+    <text x="795" y="80" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="bold" fill="#6a35b0">Lea</text>
+  </g>
+
+  <!-- caminho pontilhado ligando as duas casas, por cima da rua -->
+  <path d="M 155 165 Q 450 110 745 165" fill="none" stroke="#ffffff" stroke-width="3" stroke-dasharray="2 12" stroke-linecap="round" opacity="0.9"/>
+
+  <!-- coracoes entre as casas -->
+  <g fill="#ff5fa8">
+    <path d="M430 95 C 430 85, 415 85, 415 97 C 415 107, 430 116, 430 116 C 430 116, 445 107, 445 97 C 445 85, 430 85, 430 95 Z"/>
+  </g>
+  <g fill="#9b5de5">
+    <path d="M468 75 C 468 68, 457 68, 457 77 C 457 85, 468 92, 468 92 C 468 92, 479 85, 479 77 C 479 68, 468 68, 468 75 Z"/>
+  </g>
+  <g fill="#ff8fc7">
+    <path d="M392 70 C 392 65, 384 65, 384 71 C 384 77, 392 83, 392 83 C 392 83, 400 77, 400 71 C 400 65, 392 65, 392 70 Z"/>
+  </g>
+
+  <!-- carrinho da polly no meio da rua -->
+  <g transform="translate(430,150)">
+    <rect x="-30" y="0" width="60" height="24" rx="10" fill="#ff2d95"/>
+    <rect x="-18" y="-10" width="36" height="16" rx="7" fill="#ff6bb8"/>
+    <circle cx="-18" cy="26" r="7" fill="#4a3b4f"/>
+    <circle cx="18" cy="26" r="7" fill="#4a3b4f"/>
+  </g>
+</svg>

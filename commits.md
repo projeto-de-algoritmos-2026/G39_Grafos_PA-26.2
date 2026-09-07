@@ -61,3 +61,21 @@ vez que a página abre. grafo.py agora só gera a cidade fixa (nos, arestas, pes
 2. Adicionado destaque visual em layout-rascunho.html: caminho minimo em amarelo, partida 
 em verde, chegada em vermelho. Cada F5 sorteia um desafio novo. 
 comando para ver : xdg-open ~/G39_Grafos_PA-26.2/layout-rascunho.html
+
+### lógica: dijkstra com pontos intermediários e desafios dinâmicos
+**autor:** Cibelly
+3. Implementado o fluxo de desafios com três pontos: Lila (partida) → Lea (ponto intermediário) → festa (chegada).
+O sorteio agora garante uma distância mínima entre os pontos e o Dijkstra é executado duas vezes: no trecho Lila→Lea e no trecho Lea→festa, com o custo total calculado pela soma dos dois caminhos.
+
+### jogo: movimento do carrinho e logica de vitoria
+**autor:** Cibelly
+Carrinho agora se move ao clicar nos nos vizinhos. Jogo tem 2 fases (Lila->Lea, 
+Lea->festa) e ao chegar mostra o caminho percorrido comparado com o dijkstra (quanto 
+ficou acima do otimo). //preciso arrumar pq ate agr elas só vao pra festa, e aparentemente tem mais lugares q não lembrava
+
+### jogo: destino aleatorio e carro da lea seguindo
+**autor:** Cibelly
+Destino final agora e sorteado entre banco, parque, predio e quadra de esportes (exclusivo, 
+nao repete em outro quarteirao). Carro da lea aparece ao encontrar a lila (roxo, via filtro 
+css) e segue um no atras dela ate o destino. Removidas todas as referencias a "festa".
+
