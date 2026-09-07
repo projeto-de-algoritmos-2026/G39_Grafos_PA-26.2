@@ -5,8 +5,7 @@
 <title>Grafo da Cidade</title>
 <style>
   body { font-family: sans-serif; background: #f4f4f4; }
-  .no { fill: #ff69b4; stroke: white; stroke-width: 3; cursor: pointer; }
-  .no-label { font-size: 14px; font-weight: bold; text-anchor: middle; fill: white; }
+  .no { fill: rgba(255, 255, 255, 0.5); stroke: none; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -301,10 +300,65 @@
     const adjacencia = construirListaAdjacencia(dadosDoGrafo.arestas);
     const [partida, intermediario, chegada] = sortearTresPontos(adjacencia);
 
-    // trecho 1: lila sai de casa e vai ate a casa da lea
-    const [caminhoLilaLea, custoLilaLea] = dijkstra(adjacencia, partida, intermediario);
-    // trecho 2: as duas juntas, da casa da lea ate o destino sorteado
-    const [caminhoLeaDestino, custoLeaDestino] = dijkstra(adjacencia, intermediario, chegada);
+    // --- no extra "chegada na casa da lea" -------------------------------
+    // em vez de marcar a chegada no proprio no da esquina (intermediario),
+    // cria um no novo bem no meio da rua que fica em frente a casa dela (o
+    // lado de baixo do quarteirao, que e onde a calcada/entrada das imagens
+    // de casa sempre desemboca). esse no fica ENTRE os dois nos normais
+    // daquele lado -- a rua direta entre eles deixa de existir, virando duas
+    // metades ate o no novo, e essas duas metades sao sempre "normal" (sem
+    // obstaculo), garantindo que da pra chegar na porta da lea sem obstaculo
+    // nesse ultimo pedacinho.
+    const indiceQuadraLea = indiceDaQuadraDoNo(intermediario);
+    const quadraDaLea = QUADRAS[indiceQuadraLea];
+    const noEsquerdoLea = quadraDaLea[3]; // canto inferior-esquerdo do quarteirao
+    const noDireitoLea = quadraDaLea[2]; // canto inferior-direito do quarteirao
+    const pontoEsquerdoLea = porId[noEsquerdoLea];
+    const pontoDireitoLea = porId[noDireitoLea];
+
+    const NO_CHEGADA_LEA = "chegada-lea";
+    const noChegadaLea = {
+      id: NO_CHEGADA_LEA,
+      x: (pontoEsquerdoLea.x + pontoDireitoLea.x) / 2,
+      y: pontoEsquerdoLea.y,
+    };
+    NOS.push(noChegadaLea);
+    porId[NO_CHEGADA_LEA] = noChegadaLea;
+
+    adjacencia[noEsquerdoLea] = adjacencia[noEsquerdoLea].filter(([vizinho]) => vizinho !== noDireitoLea);
+    adjacencia[noDireitoLea] = adjacencia[noDireitoLea].filter(([vizinho]) => vizinho !== noEsquerdoLea);
+    adjacencia[NO_CHEGADA_LEA] = [[noEsquerdoLea, 1], [noDireitoLea, 1]];
+    adjacencia[noEsquerdoLea].push([NO_CHEGADA_LEA, 1]);
+    adjacencia[noDireitoLea].push([NO_CHEGADA_LEA, 1]);
+
+    // --- no extra "chegada final", igualzinho ao de cima so que pro destino
+    // sorteado (banco/parque/predio/quadra) em vez da casa da lea
+    const indiceQuadraDestino = indiceDaQuadraDoNo(chegada);
+    const quadraDoDestino = QUADRAS[indiceQuadraDestino];
+    const noEsquerdoDestino = quadraDoDestino[3]; // canto inferior-esquerdo do quarteirao
+    const noDireitoDestino = quadraDoDestino[2]; // canto inferior-direito do quarteirao
+    const pontoEsquerdoDestino = porId[noEsquerdoDestino];
+    const pontoDireitoDestino = porId[noDireitoDestino];
+
+    const NO_CHEGADA_FINAL = "chegada-final";
+    const noChegadaFinal = {
+      id: NO_CHEGADA_FINAL,
+      x: (pontoEsquerdoDestino.x + pontoDireitoDestino.x) / 2,
+      y: pontoEsquerdoDestino.y,
+    };
+    NOS.push(noChegadaFinal);
+    porId[NO_CHEGADA_FINAL] = noChegadaFinal;
+
+    adjacencia[noEsquerdoDestino] = adjacencia[noEsquerdoDestino].filter(([vizinho]) => vizinho !== noDireitoDestino);
+    adjacencia[noDireitoDestino] = adjacencia[noDireitoDestino].filter(([vizinho]) => vizinho !== noEsquerdoDestino);
+    adjacencia[NO_CHEGADA_FINAL] = [[noEsquerdoDestino, 1], [noDireitoDestino, 1]];
+    adjacencia[noEsquerdoDestino].push([NO_CHEGADA_FINAL, 1]);
+    adjacencia[noDireitoDestino].push([NO_CHEGADA_FINAL, 1]);
+
+    // trecho 1: lila sai de casa e vai ate a porta da casa da lea
+    const [caminhoLilaLea, custoLilaLea] = dijkstra(adjacencia, partida, NO_CHEGADA_LEA);
+    // trecho 2: as duas juntas, da porta da lea ate a porta do destino sorteado
+    const [caminhoLeaDestino, custoLeaDestino] = dijkstra(adjacencia, NO_CHEGADA_LEA, NO_CHEGADA_FINAL);
     const custoTotal = custoLilaLea + custoLeaDestino;
 
     // --- destino final: sorteado entre os 4 lugares que tem imagem propria.
@@ -330,8 +384,6 @@
     console.log("custo total (soma dos dois trechos):", custoTotal);
 
     const indiceQuadraLila = indiceDaQuadraDoNo(partida);
-    const indiceQuadraLea = indiceDaQuadraDoNo(intermediario);
-    const indiceQuadraDestino = indiceDaQuadraDoNo(chegada);
 
     // casa da lila e da lea e o destino sorteado tem posicao fixa (na
     // quadra perto do respectivo no); os demais quarteiroes sorteiam entre
@@ -362,18 +414,46 @@
       });
     }
 
-    // 3) desenha todas as ruas por cima (ficam atras dos nos)
+    // 3) desenha todas as ruas por cima (ficam atras dos nos). as ruas que
+    // viraram "chegada da lea" e "chegada final" sao puladas aqui (ja nao
+    // existem mais como aresta unica) e desenhadas em seguida, forcadas
+    // como "normal" (sem obstaculo).
     for (const aresta of dadosDoGrafo.arestas) {
+      const ehRuaDaChegadaLea =
+        (aresta.source === noEsquerdoLea && aresta.target === noDireitoLea) ||
+        (aresta.source === noDireitoLea && aresta.target === noEsquerdoLea);
+      const ehRuaDaChegadaFinal =
+        (aresta.source === noEsquerdoDestino && aresta.target === noDireitoDestino) ||
+        (aresta.source === noDireitoDestino && aresta.target === noEsquerdoDestino);
+      if (ehRuaDaChegadaLea || ehRuaDaChegadaFinal) continue;
       desenhaRua(porId[aresta.source], porId[aresta.target], aresta.label);
     }
+    desenhaRua(pontoEsquerdoLea, pontoDireitoLea, "normal");
+    desenhaRua(pontoEsquerdoDestino, pontoDireitoDestino, "normal");
+
+    // os 2 nos especiais usam uma imagem propria no lugar do circulo padrao
+    const ICONES_NO = {
+      [NO_CHEGADA_LEA]: "imagens/no-lea.png",
+      [NO_CHEGADA_FINAL]: "imagens/no-chegada.png",
+    };
+    const TAMANHO_ICONE_NO = 40;
 
     // 4) desenha os nos (esquinas) por cima, cada um clicavel (a logica de
     // clique -- onCliqueNo -- e definida mais abaixo, junto do resto do jogo)
     for (const no of NOS) {
-      const circulo = el("circle", { cx: no.x, cy: no.y, r: 18, class: "no" });
+      const icone = ICONES_NO[no.id];
+      if (icone) {
+        const imagemDoNo = el("image", {
+          href: icone,
+          x: no.x - TAMANHO_ICONE_NO / 2, y: no.y - TAMANHO_ICONE_NO / 2,
+          width: TAMANHO_ICONE_NO, height: TAMANHO_ICONE_NO,
+          style: "cursor: pointer;",
+        });
+        imagemDoNo.addEventListener("click", () => onCliqueNo(no.id));
+        continue;
+      }
+      const circulo = el("circle", { cx: no.x, cy: no.y, r: 10, class: "no" });
       circulo.addEventListener("click", () => onCliqueNo(no.id));
-      const label = el("text", { x: no.x, y: no.y + 5, class: "no-label" });
-      label.textContent = no.id;
     }
 
     // 5) destaca os dois trechos do dijkstra, por cima da rua, com uma cor
@@ -400,8 +480,8 @@
       el("circle", { cx: no.x, cy: no.y, r: 23, fill: "none", stroke: cor, "stroke-width": 5 });
     }
     destacaNo(partida, "#2ecc71"); // verde: partida (casa da Lila)
-    destacaNo(intermediario, "#3498db"); // azul: intermediario (casa da Lea)
-    destacaNo(chegada, "#e74c3c"); // vermelho: chegada (destino sorteado)
+    destacaNo(NO_CHEGADA_LEA, "#3498db"); // azul: chegada na casa da Lea (o no novo, na rua em frente)
+    destacaNo(NO_CHEGADA_FINAL, "#e74c3c"); // vermelho: chegada (o no novo, na rua em frente ao destino)
 
     // --- jogabilidade: mover o carrinho da lila clicando nos nos ----------
     // o jogador so pode clicar num no vizinho (ligado por uma aresta) ao no
@@ -494,9 +574,9 @@
       ESTADO_JOGO.noAtual = id;
       moverCarroLilaPara(id);
 
-      if (ESTADO_JOGO.fase === "ate-lea" && id === intermediario) {
+      if (ESTADO_JOGO.fase === "ate-lea" && id === NO_CHEGADA_LEA) {
         ESTADO_JOGO.fase = "ate-destino";
-        exibirCarroLea(intermediario);
+        exibirCarroLea(NO_CHEGADA_LEA);
         atualizarMensagem(
           `Lila encontrou a Lea! Agora e so chegar juntas ${destinoSorteado.preposicao} ${destinoSorteado.nome}.`
         );
@@ -509,7 +589,7 @@
         moverCarroLeaPara(noAntes);
       }
 
-      if (ESTADO_JOGO.fase === "ate-destino" && id === chegada) {
+      if (ESTADO_JOGO.fase === "ate-destino" && id === NO_CHEGADA_FINAL) {
         ESTADO_JOGO.fase = "concluido";
         const diferenca = ESTADO_JOGO.custo - custoTotal;
         const comparacao = diferenca <= 0
@@ -527,7 +607,7 @@
     }
 
     atualizarMensagem(
-      `Lila comeca em ${partida}. Encontre a Lea (${intermediario}) e depois vao juntas ate ${destinoSorteado.artigo} ${destinoSorteado.nome}.`
+      `Lila comeca em ${partida}. Encontre a Lea (na porta da casa dela, no ${NO_CHEGADA_LEA}) e depois vao juntas ate ${destinoSorteado.artigo} ${destinoSorteado.nome}.`
     );
   </script>
 </body>
