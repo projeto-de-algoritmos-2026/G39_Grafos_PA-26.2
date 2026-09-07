@@ -40,3 +40,13 @@ adicionei mais nos no layout
 **autor:** Isabelle
 ajustei ruas, mudei o terreno para se adpatr melhor no computador
 
+
+### grafo: geração programática
+**autor:** Cibelly
+Grafo agora é gerado por parâmetros (colunas, linhas) em vez de listas fixas. Grade 
+mantida em 32 nós.
+
+### layout: unificação com o grafo
+**autor:** Cibelly
+Layout deixou de ter grade própria e passou a ler direto do dados.js, mesmo arquivo 
+gerado pelo grafo. Antes tinha 24 nós no layout e 32 no grafo, agora bate certinho.
