@@ -79,3 +79,7 @@ Destino final agora e sorteado entre banco, parque, predio e quadra de esportes 
 nao repete em outro quarteirao). Carro da lea aparece ao encontrar a lila (roxo, via filtro 
 css) e segue um no atras dela ate o destino. Removidas todas as referencias a "festa".
 
+### docs: readme e identidade visual
+**autor:** Cibelly
+Criado README.md completo (sobre o jogo, grafo, dijkstra, instalacao, como jogar) e 
+assets/banner.svg com ilustracao das casas da Lila e da Lea.

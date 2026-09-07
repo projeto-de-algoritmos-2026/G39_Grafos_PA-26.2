@@ -1,15 +1,15 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="Ilustração de duas casinhas, uma rosa e uma roxa, ligadas por um caminho pontilhado com um carrinho e corações no meio" width="100%">
+  <img src="assets/Polly.png" alt="Ilustração de duas casinhas, uma rosa e uma roxa, ligadas por um caminho pontilhado com um carrinho e corações no meio" width="100%">
 </p>
 
-<h1 align="center">🌷 Polly das Esquinas 💜</h1>
+<h1 align="center">🌷 Polly Party Pickup 💜</h1>
 
 <p align="center">
-  <em>(outros nomes que consideramos: "Lila & Lea: Aventura na Cidade", "Polly do Encontro")</em>
+  <em>Lila & Lea: Aventura na Cidade</em>
 </p>
 
 <p align="center">
-  <b>G39</b> · Conteúdo da Disciplina: <b>Grafos 1</b>
+  <b>G39</b> · <b>Grafos </b>
 </p>
 
 <p align="center">
@@ -24,14 +24,14 @@
 
 | Matrícula | Aluno |
 |:---:|:---|
-| `-` | _(preencher)_ |
-| `-` | _(preencher)_ |
+| `231026680` | _Cibelly Lourenço_ |
+| `123456789` | _Isabelly Costa_ |
 
 ---
 
 ## 💌 Sobre
 
-**Polly das Esquinas** é um jogo baseado no clássico jogo de tabuleiro da Polly de carrinho, reimaginado como um problema de grafos.
+**Polly Party Pickup** é baseado em um jogo antigo de navegador da franquia Polly Pocket, muito popular nos anos 2000, mas reimaginado como um problema de grafos.
 
 A história: **Lila** sai de casa dirigindo pelas ruas da cidade em busca da sua amiga **Lea**. Assim que as duas se encontram, elas seguem juntas até um destino sorteado entre 4 lugares possíveis: 🏦 banco, 🌳 parque, 🏢 prédio ou 🏀 quadra de esportes. Só que nem toda rua é tranquila — algumas têm obstáculos (🌪️ tornado, 🛢️ óleo, 📌 pregos, 🟤 lama) que tornam o trajeto mais demorado.
 
@@ -39,7 +39,7 @@ A história: **Lila** sai de casa dirigindo pelas ruas da cidade em busca da sua
 
 - **Nós** → esquinas da cidade (uma grade de 32 esquinas, 8 colunas × 4 linhas).
 - **Arestas** → ruas que ligam esquinas vizinhas (o grafo não é direcionado: toda rua pode ser percorrida nos dois sentidos).
-- **Pesos** → o "custo" de atravessar cada rua. Ruas livres custam `1`; ruas com obstáculo custam mais (`tornado = 7`, `óleo = 5`, `pregos = 3`, `lama = 8`), simulando o tempo extra que cada imprevisto causa.
+- **Pesos** → o "custo" de atravessar cada rua. Ruas livres custam `1`; ruas com obstáculo (`tornado = 7`, `óleo = 5`, `pregos = 3`, `lama = 8`), simulando o tempo extra que cada imprevisto causa.
 
 O grafo é **cíclico** (é uma malha de quadras, não uma árvore) e sempre totalmente conexo, já que é gerado a partir de uma grade regular.
 
@@ -47,10 +47,10 @@ O grafo é **cíclico** (é uma malha de quadras, não uma árvore) e sempre tot
 
 O problema do jogo é, no fundo, sempre o mesmo: **dado um ponto de partida e um ponto de chegada, qual é o caminho de menor custo entre eles, considerando os obstáculos pelo caminho?** Como todos os pesos são positivos (nenhuma rua "desconta" tempo), o algoritmo de **Dijkstra** é a escolha natural — ele garante o caminho ótimo nesse cenário, com uma complexidade muito mais eficiente do que testar todas as rotas possíveis.
 
-Como a jornada tem **3 pontos**, não 2 (a casa da Lila → a casa da Lea → o destino sorteado), o Dijkstra roda **duas vezes por partida**:
+Como a jornada tem **3 pontos**, a casa da Lila → a casa da Lea → o destino sorteado, o Dijkstra roda **duas vezes por partida**:
 
-1. 🚗 **Trecho 1:** da casa da Lila até a casa da Lea.
-2. 🚗💜 **Trecho 2:** da casa da Lea até o destino sorteado (com as duas já juntas).
+1. **Trecho 1:** da casa da Lila até a casa da Lea.
+2. **Trecho 2:** da casa da Lea até o destino sorteado (com as duas já juntas).
 
 O custo total do desafio é a soma dos dois trechos, e é contra esse valor que o desempenho do jogador é comparado no final.
 
@@ -76,14 +76,6 @@ O custo total do desafio é a soma dos dois trechos, e é contra esse valor que 
 
 📺 [Assista aqui](https://www.youtube.com/watch?v=SEU_VIDEO_AQUI) _(link a ser atualizado)_
 
----
-
-## ⚙️ Instalação
-
-### Pré-requisitos
-
-- [Git](https://git-scm.com/)
-- Um navegador (Chrome, Firefox, etc.) — não é necessário instalar nenhum servidor, framework ou dependência.
 
 ### Passo a passo
 
@@ -91,12 +83,8 @@ O custo total do desafio é a soma dos dois trechos, e é contra esse valor que 
 git clone git@github.com:projeto-de-algoritmos-2026/G39_Grafos_PA-26.2.git
 cd G39_Grafos_PA-26.2
 ```
+Depois, basta abrir o arquivo `layout-rascunho.html` direto no navegador (duplo clique nele, ou `open layout-rascunho.html` no terminal) 
 
-Depois, basta abrir o arquivo `layout-rascunho.html` direto no navegador (duplo clique nele, ou `open layout-rascunho.html` no terminal) — é só HTML/JS/SVG puro, sem build e sem servidor.
-
-> 💡 Se quiser regenerar a cidade (pesos das ruas), rode `python3 grafo.py` antes de abrir a página — isso reescreve o arquivo `dados.js` usado pelo jogo. Isso é opcional: a cidade fixa (esquinas e ruas) já vem pronta no repositório.
-
----
 
 ## 🕹️ Uso
 
@@ -109,7 +97,7 @@ Depois, basta abrir o arquivo `layout-rascunho.html` direto no navegador (duplo 
 
 ---
 
-## ✨ Outros
+## Outros
 
 - Cada partida é diferente: a posição da casa da Lila, da casa da Lea e o destino sorteado mudam a cada vez que a página é carregada — assim como quais ruas têm obstáculos.
 - É permitido "voltar" para um nó já visitado (o jogo não bloqueia retrocessos) — só que isso custa mais, já que a rua é percorrida de novo.
