@@ -72,3 +72,10 @@ O sorteio agora garante uma distância mínima entre os pontos e o Dijkstra é e
 Carrinho agora se move ao clicar nos nos vizinhos. Jogo tem 2 fases (Lila->Lea, 
 Lea->festa) e ao chegar mostra o caminho percorrido comparado com o dijkstra (quanto 
 ficou acima do otimo). //preciso arrumar pq ate agr elas só vao pra festa, e aparentemente tem mais lugares q não lembrava
+
+### jogo: destino aleatorio e carro da lea seguindo
+**autor:** Cibelly
+Destino final agora e sorteado entre banco, parque, predio e quadra de esportes (exclusivo, 
+nao repete em outro quarteirao). Carro da lea aparece ao encontrar a lila (roxo, via filtro 
+css) e segue um no atras dela ate o destino. Removidas todas as referencias a "festa".
+

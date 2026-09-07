@@ -65,6 +65,14 @@
       }
     }
 
+    // acha a primeira quadra (bloco de 4 nos) que tem esse no como um dos
+    // cantos -- e onde a casa da lila/lea ou o destino vao ser desenhados.
+    // usada tambem no sorteio dos 3 pontos, pra garantir que eles nao
+    // compartilhem a mesma quadra (senao uma imagem sobrescreveria a outra)
+    function indiceDaQuadraDoNo(id) {
+      return QUADRAS.findIndex(quadra => quadra.includes(id));
+    }
+
     // preenche uma quadra com a "imagem" recebida, esticada pra cobrir a
     // quadra inteira -- qual imagem usar em cada quadra e decidido mais
     // abaixo (casa da lila/lea nas quadras da partida/intermediario, e
@@ -166,8 +174,9 @@
     // novo. dados.js so guarda a cidade fixa (nos/arestas/pesos).
     //
     // a narrativa tem 3 pontos, nao 2: a lila sai de casa (partida), precisa
-    // achar a lea (intermediario) e so depois as duas vao juntas ate a festa
-    // (chegada). por isso rodamos o dijkstra duas vezes, um por trecho.
+    // achar a lea (intermediario) e so depois as duas vao juntas ate o
+    // destino sorteado (chegada). por isso rodamos o dijkstra duas vezes,
+    // um por trecho.
 
     function construirListaAdjacencia(arestas) {
       const adjacencia = {};
@@ -199,24 +208,31 @@
     // mesmo valor usado em grafo.py, pra manter a mesma regra do jogo
     const DISTANCIA_MINIMA_ARESTAS = 6;
 
-    // sorteia partida (lila), intermediario (lea) e chegada (festa), 3 nos
+    // sorteia partida (lila), intermediario (lea) e chegada (destino), 3 nos
     // distintos, exigindo DISTANCIA_MINIMA_ARESTAS entre cada par consecutivo
-    // (lila-lea e lea-festa) -- nao exige nada entre lila e festa diretamente
+    // (lila-lea e lea-destino) -- nao exige nada entre lila e destino direto.
+    // tambem exige que os 3 fiquem em quadras diferentes: senao a imagem de
+    // uma casa/destino sobrescreveria a outra na mesma quadra.
     function sortearTresPontos(adjacencia) {
       const ids = NOS.map(no => no.id);
       while (true) {
         const partida = ids[Math.floor(Math.random() * ids.length)];
         const intermediario = ids[Math.floor(Math.random() * ids.length)];
         if (intermediario === partida) continue;
+        if (indiceDaQuadraDoNo(intermediario) === indiceDaQuadraDoNo(partida)) continue;
 
         const distDaPartida = distanciaEmArestas(adjacencia, partida);
         if (distDaPartida[intermediario] < DISTANCIA_MINIMA_ARESTAS) continue;
 
         const distDoIntermediario = distanciaEmArestas(adjacencia, intermediario);
+        const indiceQuadraPartida = indiceDaQuadraDoNo(partida);
+        const indiceQuadraIntermediario = indiceDaQuadraDoNo(intermediario);
         const candidatosChegada = ids.filter(id =>
           id !== partida &&
           id !== intermediario &&
-          distDoIntermediario[id] >= DISTANCIA_MINIMA_ARESTAS
+          distDoIntermediario[id] >= DISTANCIA_MINIMA_ARESTAS &&
+          indiceDaQuadraDoNo(id) !== indiceQuadraPartida &&
+          indiceDaQuadraDoNo(id) !== indiceQuadraIntermediario
         );
         if (candidatosChegada.length === 0) continue;
 
@@ -266,39 +282,43 @@
 
     // trecho 1: lila sai de casa e vai ate a casa da lea
     const [caminhoLilaLea, custoLilaLea] = dijkstra(adjacencia, partida, intermediario);
-    // trecho 2: as duas juntas, da casa da lea ate a festa
-    const [caminhoLeaFesta, custoLeaFesta] = dijkstra(adjacencia, intermediario, chegada);
-    const custoTotal = custoLilaLea + custoLeaFesta;
+    // trecho 2: as duas juntas, da casa da lea ate o destino sorteado
+    const [caminhoLeaDestino, custoLeaDestino] = dijkstra(adjacencia, intermediario, chegada);
+    const custoTotal = custoLilaLea + custoLeaDestino;
+
+    // --- destino final: sorteado entre os 4 lugares que tem imagem propria.
+    // o lugar sorteado fica EXCLUSIVO do quarteirao de chegada (nao pode
+    // repetir em nenhum outro quarteirao do mapa nessa partida) -- os outros
+    // 3 continuam disponiveis pro sorteio dos quarteiroes genericos.
+    const LUGARES_DESTINO = [
+      { arquivo: "imagens/canteiros/banco.png", nome: "banco", artigo: "o", preposicao: "ao" },
+      { arquivo: "imagens/canteiros/parque.png", nome: "parque", artigo: "o", preposicao: "ao" },
+      { arquivo: "imagens/canteiros/predio.png", nome: "prédio", artigo: "o", preposicao: "ao" },
+      { arquivo: "imagens/canteiros/quadra-parque.png", nome: "quadra de esportes", artigo: "a", preposicao: "à" },
+    ];
+    const destinoSorteado = LUGARES_DESTINO[Math.floor(Math.random() * LUGARES_DESTINO.length)];
+    const CANTEIROS_ALEATORIOS = LUGARES_DESTINO
+      .filter(lugar => lugar !== destinoSorteado)
+      .map(lugar => lugar.arquivo);
 
     console.log("partida (casa da Lila):", partida);
     console.log("intermediario (casa da Lea):", intermediario);
-    console.log("chegada (festa):", chegada);
+    console.log("chegada (destino sorteado):", chegada, "->", destinoSorteado.nome);
     console.log("trecho 1 - Lila -> Lea:", caminhoLilaLea, "| custo:", custoLilaLea);
-    console.log("trecho 2 - Lea -> festa:", caminhoLeaFesta, "| custo:", custoLeaFesta);
+    console.log("trecho 2 - Lea -> destino:", caminhoLeaDestino, "| custo:", custoLeaDestino);
     console.log("custo total (soma dos dois trechos):", custoTotal);
-
-    // --- canteiros: casa da lila e da lea tem posicao fixa (na quadra perto
-    // do no de partida/intermediario), os outros 4 sao sorteados nas demais
-    // quadras -- por isso nao entram mais no sorteio geral.
-    const CANTEIROS_ALEATORIOS = [
-      "imagens/canteiros/banco.png",
-      "imagens/canteiros/parque.png",
-      "imagens/canteiros/predio.png",
-      "imagens/canteiros/quadra-parque.png",
-    ];
-
-    // acha a primeira quadra (bloco de 4 nos) que tem esse no como um dos
-    // cantos -- e onde a casa da lila/lea vai ser desenhada
-    function indiceDaQuadraDoNo(id) {
-      return QUADRAS.findIndex(quadra => quadra.includes(id));
-    }
 
     const indiceQuadraLila = indiceDaQuadraDoNo(partida);
     const indiceQuadraLea = indiceDaQuadraDoNo(intermediario);
+    const indiceQuadraDestino = indiceDaQuadraDoNo(chegada);
 
+    // casa da lila e da lea e o destino sorteado tem posicao fixa (na
+    // quadra perto do respectivo no); os demais quarteiroes sorteiam entre
+    // os 3 lugares que sobraram (o destino nao entra nesse sorteio generico)
     const imagensDasQuadras = QUADRAS.map((_ids, indice) => {
       if (indice === indiceQuadraLila) return "imagens/canteiros/casa-lila.png";
       if (indice === indiceQuadraLea) return "imagens/canteiros/casa-lea.png";
+      if (indice === indiceQuadraDestino) return destinoSorteado.arquivo;
       return CANTEIROS_ALEATORIOS[Math.floor(Math.random() * CANTEIROS_ALEATORIOS.length)];
     });
 
@@ -336,7 +356,7 @@
     }
 
     // 5) destaca os dois trechos do dijkstra, por cima da rua, com uma cor
-    // diferente pra cada um (pra dar pra distinguir lila->lea de lea->festa)
+    // diferente pra cada um (pra dar pra distinguir lila->lea de lea->destino)
     function destacaCaminho(caminho, cor) {
       for (let i = 0; i < caminho.length - 1; i++) {
         const a = porId[caminho[i]];
@@ -349,18 +369,18 @@
       }
     }
     destacaCaminho(caminhoLilaLea, "#ffd400"); // amarelo: trecho 1 (lila -> lea)
-    destacaCaminho(caminhoLeaFesta, "#ff7f11"); // laranja: trecho 2 (lea -> festa)
+    destacaCaminho(caminhoLeaDestino, "#ff7f11"); // laranja: trecho 2 (lea -> destino)
 
-    // 6) destaca os 3 nos especiais da narrativa por cima de tudo. a festa
-    // ainda nao tem imagem propria, entao por enquanto so ganha um contorno
-    // diferente (destaque temporario) ate decidirem uma arte pra ela.
+    // 6) destaca os 3 nos especiais da narrativa por cima de tudo. o destino
+    // ja tem a imagem do lugar sorteado no quarteirao (acima), aqui e so o
+    // contorno colorido pra reforcar visualmente qual no e cada um.
     function destacaNo(id, cor) {
       const no = porId[id];
       el("circle", { cx: no.x, cy: no.y, r: 23, fill: "none", stroke: cor, "stroke-width": 5 });
     }
     destacaNo(partida, "#2ecc71"); // verde: partida (casa da Lila)
     destacaNo(intermediario, "#3498db"); // azul: intermediario (casa da Lea)
-    destacaNo(chegada, "#e74c3c"); // vermelho: chegada (festa)
+    destacaNo(chegada, "#e74c3c"); // vermelho: chegada (destino sorteado)
 
     // --- jogabilidade: mover o carrinho da lila clicando nos nos ----------
     // o jogador so pode clicar num no vizinho (ligado por uma aresta) ao no
@@ -371,7 +391,7 @@
       noAtual: partida,
       caminho: [partida],
       custo: 0,
-      // "ate-lea" -> "ate-festa" -> "concluido"
+      // "ate-lea" -> "ate-destino" -> "concluido"
       fase: "ate-lea",
     };
 
@@ -387,10 +407,10 @@
       console.log(texto);
     }
 
-    // desenha o carrinho em cima do no de partida (a casa da lila)
+    // desenha o carrinho da lila em cima do no de partida (a casa dela)
     const LARGURA_CARRO = 40;
     const ALTURA_CARRO = 28;
-    const imagemCarro = el("image", {
+    const imagemCarroLila = el("image", {
       href: "imagens/carro-polly.png",
       x: porId[partida].x - LARGURA_CARRO / 2,
       y: porId[partida].y - ALTURA_CARRO / 2,
@@ -398,10 +418,34 @@
       height: ALTURA_CARRO,
     });
 
-    function moverCarroPara(id) {
+    // carro da lea: mesma imagem do carro-polly, so que roxo (via filtro css
+    // de hue-rotate, sem precisar de uma imagem nova) -- comeca escondido e
+    // so aparece quando a lila encontra a lea (fase "ate-destino")
+    const imagemCarroLea = el("image", {
+      href: "imagens/carro-polly.png",
+      x: porId[partida].x - LARGURA_CARRO / 2,
+      y: porId[partida].y - ALTURA_CARRO / 2,
+      width: LARGURA_CARRO,
+      height: ALTURA_CARRO,
+      style: "filter: hue-rotate(-60deg);",
+      visibility: "hidden",
+    });
+
+    function moverCarroLilaPara(id) {
       const no = porId[id];
-      imagemCarro.setAttribute("x", no.x - LARGURA_CARRO / 2);
-      imagemCarro.setAttribute("y", no.y - ALTURA_CARRO / 2);
+      imagemCarroLila.setAttribute("x", no.x - LARGURA_CARRO / 2);
+      imagemCarroLila.setAttribute("y", no.y - ALTURA_CARRO / 2);
+    }
+
+    function moverCarroLeaPara(id) {
+      const no = porId[id];
+      imagemCarroLea.setAttribute("x", no.x - LARGURA_CARRO / 2);
+      imagemCarroLea.setAttribute("y", no.y - ALTURA_CARRO / 2);
+    }
+
+    function exibirCarroLea(id) {
+      moverCarroLeaPara(id);
+      imagemCarroLea.setAttribute("visibility", "visible");
     }
 
     // chamada pelo clique num no (ou diretamente, em testes/console)
@@ -411,30 +455,40 @@
         return;
       }
 
-      const peso = pesoDaAresta(ESTADO_JOGO.noAtual, id);
+      const noAntes = ESTADO_JOGO.noAtual;
+      const peso = pesoDaAresta(noAntes, id);
       if (peso === null) {
         // clique invalido: no nao e vizinho do no atual do carrinho.
         // nao pode "pular" direto pra qualquer no do mapa.
         atualizarMensagem(
-          `Movimento invalido: o no ${id} nao e vizinho do no atual (${ESTADO_JOGO.noAtual}).`
+          `Movimento invalido: o no ${id} nao e vizinho do no atual (${noAntes}).`
         );
         return;
       }
 
-      // move o carrinho: registra o no no caminho e soma o custo da rua
-      // percorrida. voltar pra um no ja visitado e permitido -- so custa mais.
+      // move o carrinho da lila: registra o no no caminho e soma o custo da
+      // rua percorrida. voltar pra um no ja visitado e permitido -- so custa mais.
       ESTADO_JOGO.custo += peso;
       ESTADO_JOGO.caminho.push(id);
       ESTADO_JOGO.noAtual = id;
-      moverCarroPara(id);
+      moverCarroLilaPara(id);
 
       if (ESTADO_JOGO.fase === "ate-lea" && id === intermediario) {
-        ESTADO_JOGO.fase = "ate-festa";
-        atualizarMensagem("Lila encontrou a Lea! Agora e so chegar juntas na festa.");
+        ESTADO_JOGO.fase = "ate-destino";
+        exibirCarroLea(intermediario);
+        atualizarMensagem(
+          `Lila encontrou a Lea! Agora e so chegar juntas ${destinoSorteado.preposicao} ${destinoSorteado.nome}.`
+        );
         return;
       }
 
-      if (ESTADO_JOGO.fase === "ate-festa" && id === chegada) {
+      // o carro da lea segue sempre um passo atras: quando a lila se move
+      // pro no "id", a lea vai pro no que a lila acabou de deixar (noAntes)
+      if (ESTADO_JOGO.fase === "ate-destino") {
+        moverCarroLeaPara(noAntes);
+      }
+
+      if (ESTADO_JOGO.fase === "ate-destino" && id === chegada) {
         ESTADO_JOGO.fase = "concluido";
         const diferenca = ESTADO_JOGO.custo - custoTotal;
         const comparacao = diferenca <= 0
@@ -442,7 +496,7 @@
           : `Voce ficou ${diferenca} acima do caminho mais rapido (dijkstra).`;
 
         atualizarMensagem(
-          `Chegaram na festa! Caminho percorrido: ${ESTADO_JOGO.caminho.join(" -> ")} ` +
+          `Chegaram ${destinoSorteado.preposicao} ${destinoSorteado.nome}! Caminho percorrido: ${ESTADO_JOGO.caminho.join(" -> ")} ` +
           `(custo ${ESTADO_JOGO.custo}). Caminho otimo: custo ${custoTotal}. ${comparacao}`
         );
         return;
@@ -452,7 +506,7 @@
     }
 
     atualizarMensagem(
-      `Lila comeca em ${partida}. Encontre a Lea (${intermediario}) e depois va ate a festa.`
+      `Lila comeca em ${partida}. Encontre a Lea (${intermediario}) e depois vao juntas ate ${destinoSorteado.artigo} ${destinoSorteado.nome}.`
     );
   </script>
 </body>
