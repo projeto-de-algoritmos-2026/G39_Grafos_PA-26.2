@@ -69,7 +69,7 @@ O custo total do desafio é a soma dos dois trechos, e é contra esse valor que 
 
 ## Vídeo de Apresentação
 
-[Assista aqui](https://www.youtube.com/watch?v=SEU_VIDEO_AQUI) _(link a ser atualizado)_
+[Assista aqui](https://youtu.be/OZiNmhC_qe4?is=lAgtcMesUsN04nFs)
 
 
 ### Passo a passo
